@@ -101,7 +101,6 @@ while True:
     for _ in range(300):
         sim.data.ctrl[:] = 0
         sim.step()
-
         viewer.render()
     reset_pole(sim)
     alg.step()
