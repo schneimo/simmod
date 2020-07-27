@@ -1,7 +1,7 @@
 from inspect import signature
+from typing import Any
 
 import numpy as np
-from typing import Any, AnyStr
 
 from simmod.algorithms.base import BaseAlgorithm
 from simmod.common.parametrization import Parametrization
@@ -30,7 +30,8 @@ class UniformDomainRandomization(BaseAlgorithm):
             n_kwargs = 0
 
         sig = signature(setter_func)
-        n_params = len(sig.parameters) - n_kwargs - 1  # Exclude name & non-positional arguments # TODO: Randomize non-positional arguments
+        n_params = len(
+            sig.parameters) - n_kwargs - 1  # Exclude name & non-positional arguments # TODO: Randomize non-positional arguments
         lower_bound = instrumentation.lower_bound
         upper_bound = instrumentation.upper_bound
         val = list()

@@ -1,10 +1,12 @@
-from typing import Union, List, Callable, AnyStr, Tuple, Any, Dict, Optional
-import numpy as np
 from abc import ABC
+from typing import Union, List, Callable, AnyStr, Tuple, Any, Dict, Optional
+
+import numpy as np
 
 Num = Union[int, float]
 Array = Union[np.ndarray, List]
 ArrayOrNum = Union[Array, Num]
+
 
 # TODO: How can we get this into JSON?
 # TODO: Algorithms as Wrappers?
@@ -89,7 +91,3 @@ class Boolean(Parameter):
             init: bool = True,
     ) -> None:
         super().__init__(mod_func, init=init)
-
-
-
-

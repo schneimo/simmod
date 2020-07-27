@@ -1,7 +1,5 @@
 from abc import ABC, abstractmethod
 
-from typing import Union, AnyStr
-
 from simmod.common.parametrization import Parametrization
 from simmod.modification.base_modifier import BaseModifier
 
@@ -9,8 +7,8 @@ from simmod.modification.base_modifier import BaseModifier
 class BaseAlgorithm(ABC):
 
     def __init__(self, *args: BaseModifier, **kwargs):
-        self.modifiers = args    # List of modifiers
-        #self.object_names = [i.object_name for i in m.instrumentation for m in self.modifiers]
+        self.modifiers = args  # List of modifiers
+        # self.object_names = [i.object_name for i in m.instrumentation for m in self.modifiers]
 
     @abstractmethod
     def _randomize_object(self, modifier: BaseModifier, instrumentation: Parametrization) -> None:

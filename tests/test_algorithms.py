@@ -1,18 +1,12 @@
 #!/usr/bin/env python
 # demonstration of markers (visual-only geoms)
 
-import os
 import numpy as np
 from mujoco_py import load_model_from_xml, MjSim, MjViewer
 
-from simmod.modification.mujoco import MujocoTextureModifier
-from simmod.modification.mujoco import MujocoCameraModifier
-from simmod.modification.mujoco import MujocoJointModifier
-from simmod.modification.mujoco import MujocoLightModifier
-from simmod.modification.mujoco import MujocoMaterialModifier
-from simmod.modification.mujoco import MujocoBodyModifier
-
 from simmod.algorithms import UniformDomainRandomization
+from simmod.modification.mujoco import MujocoMaterialModifier
+from simmod.modification.mujoco import MujocoTextureModifier
 
 MODEL_XML = """
 <?xml version="1.0" encoding="utf-8"?>

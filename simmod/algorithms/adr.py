@@ -1,6 +1,3 @@
-from inspect import signature
-
-import numpy as np
 from typing import Any, AnyStr
 
 from simmod.algorithms.base import BaseAlgorithm

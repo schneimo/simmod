@@ -6,13 +6,11 @@ https://github.com/openai/mujoco-py/blob/master/mujoco_py/modder.py
 """
 
 from collections import defaultdict
+from enum import Enum
+from typing import AnyStr, List, Union, Dict
 
 import numpy as np
 from mujoco_py import cymj
-
-from enum import Enum
-
-from typing import AnyStr, List, Union, Dict
 
 from simmod.modification.base_modifier import BaseModifier, LightModifier, MaterialModifier, TextureModifier, \
     CameraModifier, JointModifier, InertialModifier
@@ -34,6 +32,7 @@ class MujocoBaseModifier(BaseModifier):
     @property
     def model(self):
         return self.sim.model
+
 
 ###########################################################################################
 #### Adapted from: https://github.com/openai/mujoco-py/blob/master/mujoco_py/modder.py ####

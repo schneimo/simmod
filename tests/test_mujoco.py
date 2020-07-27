@@ -1,16 +1,11 @@
 #!/usr/bin/env python
 # demonstration of markers (visual-only geoms)
 
-import os
 import numpy as np
 from mujoco_py import load_model_from_xml, MjSim, MjViewer
 
-from simmod.modification.mujoco import MujocoTextureModifier
-from simmod.modification.mujoco import MujocoCameraModifier
-from simmod.modification.mujoco import MujocoJointModifier
-from simmod.modification.mujoco import MujocoLightModifier
-from simmod.modification.mujoco import MujocoMaterialModifier
 from simmod.modification.mujoco import MujocoBodyModifier
+from simmod.modification.mujoco import MujocoJointModifier
 
 MODEL_XML = """
 <?xml version="1.0" encoding="utf-8"?>
@@ -55,6 +50,7 @@ MODEL_XML = """
 def angle_normalize(x: float) -> float:
     return (x % (2 * np.pi)) - np.pi
 
+
 model = load_model_from_xml(MODEL_XML)
 sim = MjSim(model)
 viewer = MjViewer(sim)
@@ -73,7 +69,7 @@ while True:
     viewer.render()
     for name, value in zip(sim.model.joint_names, values):
         jnt_rand.set_damping(name, value)
-    #body_rand.set_mass("pole", 0.09)
+    # body_rand.set_mass("pole", 0.09)
 
     step += 1
     if step > 1000:

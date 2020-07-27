@@ -1,10 +1,10 @@
+from abc import ABC, abstractmethod
+from typing import List, Dict
+
 import numpy as np
 
-from abc import ABC, abstractmethod
-
-from typing import Union, Optional, List, Callable, AnyStr, Dict
-
 from simmod.common.parametrization import Parametrization
+
 
 # TODO: Create a default config file
 
@@ -14,9 +14,9 @@ class BaseModifier(ABC):
     def __init__(
             self,
             config: Dict,
-            #objects: Optional[List] = None,
-            #ranges: Union[np.ndarray, List[np.ndarray]] = None,
-            #setters: Optional[List] = None,
+            # objects: Optional[List] = None,
+            # ranges: Union[np.ndarray, List[np.ndarray]] = None,
+            # setters: Optional[List] = None,
             random_state=None,
             *args,
             **kwargs

@@ -1,7 +1,4 @@
 from simmod.modification.base_modifier import BaseModifier
-import numpy as np
-
-from collections import defaultdict
 
 
 class BuiltInModifyer(BaseModifier):
