@@ -4,8 +4,8 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 extras = {
-  'mujoco': ['mujoco_py>=2.0', 'imageio'],
-    #'bullet': ['pybullet>=1.7.8']
+    'mujoco': ['mujoco_py>=2.0', 'imageio'],
+    # 'bullet': ['pybullet>=1.7.8']
 }
 
 # Meta dependency groups.

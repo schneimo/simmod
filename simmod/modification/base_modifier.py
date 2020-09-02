@@ -1,3 +1,5 @@
+import json
+import yaml
 from abc import ABC, abstractmethod
 from typing import List, Dict
 
@@ -6,14 +8,14 @@ import numpy as np
 from simmod.common.parametrization import Parametrization
 
 
-# TODO: Create a default config file
+# TODO: Create a default config files
 
 
 class BaseModifier(ABC):
 
     def __init__(
             self,
-            config: Dict,
+            config: Dict = None,
             # objects: Optional[List] = None,
             # ranges: Union[np.ndarray, List[np.ndarray]] = None,
             # setters: Optional[List] = None,
@@ -29,14 +31,18 @@ class BaseModifier(ABC):
         else:
             self.random_state = random_state
 
-        assert config is not None, "Non-config option not implemented yet; please specify a configuration"
+        self._basic_config = self._get_basic_config()
+
+        if config is None:
+            config = self._basic_config
+
         default = self._get_default_from_config(config)
         self.instrumentation = list()
         for setter in config:
             assert setter in self.standard_setters.keys(), "Unknown setter function %s" % setter
             object_names = config[setter].keys()
             for object_name in object_names:
-                if object_name is "default":
+                if object_name == 'default':
                     continue
                 range_val = config[setter][object_name]
                 mod_inst = Parametrization(setter, object_name, range_val)
@@ -48,6 +54,14 @@ class BaseModifier(ABC):
                 mod_inst = Parametrization(setter, object_name, default_range_val)
                 self.instrumentation.append(mod_inst)
 
+    def _get_basic_config(self) -> Dict:
+        import os
+        path = os.path.dirname(__file__)
+        path = os.path.join(path, self._default_config_file_path)
+        with open(path) as json_file:
+            data = yaml.load(json_file, Loader=yaml.FullLoader)
+        return data
+
     @staticmethod
     def _get_default_from_config(config: Dict) -> Dict:
         setter_default = dict()
@@ -56,11 +70,6 @@ class BaseModifier(ABC):
                 setter_default[setter] = config[setter]["default"]
 
         return setter_default
-
-    @property
-    @abstractmethod
-    def model(self):
-        raise NotImplementedError
 
     @property
     @abstractmethod

@@ -1,15 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mujoco model="qube">
-    <compiler angle="radian" meshdir="../meshes/"/>
+    <compiler angle="radian"/>
     <option timestep="0.01" integrator="RK4"/>
-    <size njmax="500" nconmax="100"/>
-
-    <visual>
-        <global offwidth="2560" offheight="1329"/>
-    </visual>
 
     <worldbody>
-        <light pos="0.051036 -0.0321818 0.5" dir="0 0 -1" diffuse="0.8 0.8 0.8" specular="0.9 0.9 0.9"/>
+        <light name="" pos="0.051036 -0.0321818 0.5" dir="0 0 -1" diffuse="0.8 0.8 0.8" specular="0.9 0.9 0.9"/>
         <body name="arm" pos="0 -0.019632 0">
             <inertial pos="0 -0.0425 0" quat="0.707107 -0.707107 0 0" mass="0.095"
                       diaginertia="5.7439e-05 5.7439e-05 4.82153e-07"/>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mujoco>
+   <worldbody>
+      <light diffuse=".5 .5 .5" pos="0 0 3" dir="0 0 -1"/>
+
+      <body name="plane" pos="0 0 1">
+         <geom type="plane" size="1 1 0.1" rgba=".9 0 0 1" euler="20 0 0"/>
+      </body>
+
+      <body name="ball" pos="0 0 1">
+         <joint type="free"/>
+         <geom type="sphere" size="0.1" rgba="0 .9 0 1" friction="0.000001 10 10"/>
+      </body>
+   </worldbody>
+</mujoco>
+
+ 

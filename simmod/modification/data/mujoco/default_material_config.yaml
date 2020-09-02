@@ -1,0 +1,10 @@
+---
+specular:
+  default:
+    - [0.1, 0.3]
+shininess:
+  default:
+    - [0.1, 0.6]
+reflectance:
+  default:
+    - [0.1, 0.6]

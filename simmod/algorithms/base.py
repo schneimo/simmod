@@ -6,8 +6,8 @@ from simmod.modification.base_modifier import BaseModifier
 
 class BaseAlgorithm(ABC):
 
-    def __init__(self, *args: BaseModifier, **kwargs):
-        self.modifiers = args  # List of modifiers
+    def __init__(self, *modifiers: BaseModifier, **kwargs):
+        self.modifiers = modifiers  # List of modifiers
         # self.object_names = [i.object_name for i in m.instrumentation for m in self.modifiers]
 
     @abstractmethod

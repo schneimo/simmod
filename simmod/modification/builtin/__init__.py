@@ -1,1 +1,1 @@
-from simmod.modification.builtin.builtin_modifier import BuiltInModifyer
+from simmod.modification.builtin.builtin_modifier import BuiltInModifier

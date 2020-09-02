@@ -1,0 +1,19 @@
+---
+mass:
+  default:
+    - [0, .inf]
+pos:
+  default:
+    - [-.Inf, .inf]
+    - [-.Inf, .inf]
+    - [-.Inf, .inf]
+diaginertia:
+  default:
+    - [0, .inf]
+    - [0, .inf]
+    - [0, .inf]
+friction:
+  default:
+    - [0, 0]
+    - [0, 0]
+    - [0, 0]
