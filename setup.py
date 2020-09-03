@@ -26,9 +26,9 @@ setup(
     extras_require=extras,
     url="https://gitlab.is.tue.mpg.de/mschneider/simulation-modification-framework",
     packages=[package for package in find_packages() if package.startswith('simmod')],
-    python_requires='>=3.8',
+    python_requires='>=3.7',
     classifiers=[
         "Programming Language :: Python :: 3",
-        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.7',
     ],
 )
