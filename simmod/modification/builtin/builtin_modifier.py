@@ -131,8 +131,8 @@ class ObservationModifier(BaseModifier):
     def _get_noise(self):
         return self._noise_process(self.obs_shape)
 
-    def noise_step(self, action):
-        return action + self._get_noise()
+    def noise_step(self, observation):
+        return observation + self._get_noise()
 
 
 class RewardModifier(BaseModifier):

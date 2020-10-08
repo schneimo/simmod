@@ -7,13 +7,15 @@ from simmod.modification.mujoco.mujoco_modifier import MujocoBaseModifier
 
 class UDRMujocoWrapper(gym.Wrapper):
 
-    def __init__(self, env: Env, *modifiers: MujocoBaseModifier, sim=None):
+    def __init__(self, env: Env, *modifiers: MujocoBaseModifier):
         super(UDRMujocoWrapper, self).__init__(env)
-        if sim is None:
-            self.sim = env.unwrapped.sim
-        else:
-            self.sim = sim
+        assert env.unwrapped.sim is not None, "Assuming a Gym environment with a Mujoco simulation at variable 'sim'"
+        self.sim = env.unwrapped.sim
+
         self.alg = UniformDomainRandomization(*modifiers)
+
+    def step(self, action):
+        ob, reward, done, info = self.env.step(action)
 
     def reset(self, **kwargs):
         self.alg.step()

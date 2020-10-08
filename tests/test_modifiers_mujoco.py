@@ -40,7 +40,9 @@ def find_body(body, name):
         if body.get('name') == "worldbody":
             raise NameError(f"Cannot find body {name}")
 
+
 ######################   BODY   ######################
+
 
 def test_mujoco_body_modifier_mass():
     # Create the trajectory by changing the XML

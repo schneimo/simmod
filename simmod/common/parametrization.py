@@ -1,5 +1,6 @@
 from abc import ABC
 from typing import Union, List, Callable, AnyStr, Tuple, Any, Dict, Optional
+from enum import Enum, auto
 
 import numpy as np
 
@@ -11,6 +12,11 @@ ArrayOrNum = Union[Array, Num]
 # TODO: How can we get this into JSON?
 # TODO: Algorithms as Wrappers?
 
+class Execution(Enum):
+    BEFORE_STEP = auto()
+    AFTER_STEP = auto()
+    RESET = auto()
+
 
 class Parametrization:
     def __init__(
@@ -18,12 +24,14 @@ class Parametrization:
             setter: AnyStr,
             object_name: AnyStr,
             parameter_range: Array,
+            execution: AnyStr,
             parameter_type: Optional[object] = None,
             shape: Optional[Tuple] = None,
             name: Optional[AnyStr] = None
     ) -> None:
         self.setter = setter
         self.object_name = object_name
+        self.execution = Execution[execution]
         if shape is not None:
             assert len(parameter_range) == 2 and shape[-1] == 2, \
                 "If a shape is given the last dimension and the length of the range must match 2 (lower and higher bound)"

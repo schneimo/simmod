@@ -2,13 +2,13 @@ from abc import ABC, abstractmethod
 
 from simmod.common.parametrization import Parametrization
 from simmod.modification.base_modifier import BaseModifier
+from simmod.modification.builtin import ActionModifier, ObservationModifier, RewardModifier
 
 
 class BaseAlgorithm(ABC):
 
     def __init__(self, *modifiers: BaseModifier, **kwargs):
         self.modifiers = modifiers  # List of modifiers
-        # self.object_names = [i.object_name for i in m.instrumentation for m in self.modifiers]
 
     @abstractmethod
     def _randomize_object(self, modifier: BaseModifier, instrumentation: Parametrization) -> None:
