@@ -20,7 +20,7 @@ class UniformDomainRandomization(BaseAlgorithm):
             self.random_state = random_state
         super().__init__(*modifiers, **kwargs)
 
-    def _randomize_object(self, modifier: BaseModifier, instrumentation: Parametrization) -> None:
+    def _randomize_object(self, modifier: BaseModifier, instrumentation: Parametrization, **kwargs) -> None:
         object_name = instrumentation.object_name
         setter_func = modifier.standard_setters[instrumentation.setter]
 
@@ -30,8 +30,9 @@ class UniformDomainRandomization(BaseAlgorithm):
             n_kwargs = 0
 
         sig = signature(setter_func)
-        n_params = len(
-            sig.parameters) - n_kwargs - 1  # Exclude name & non-positional arguments # TODO: Randomize non-positional arguments
+        n_params = len(sig.parameters) - n_kwargs - 1  # Exclude name & non-positional arguments
+        # TODO: Randomize non-positional arguments
+
         lower_bound = instrumentation.lower_bound
         upper_bound = instrumentation.upper_bound
         val = list()
@@ -39,4 +40,4 @@ class UniformDomainRandomization(BaseAlgorithm):
         n = len(lower_bound)
         for _ in range(n_params):
             val.append(np.array([self.random_state.uniform(lower_bound[i], upper_bound[i]) for i in range(n)]))
-        setter_func(object_name, *val)
+        return setter_func(object_name, *val, **kwargs)

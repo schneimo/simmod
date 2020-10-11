@@ -19,6 +19,7 @@ class Execution(Enum):
 
 
 class Parametrization:
+
     def __init__(
             self,
             setter: AnyStr,

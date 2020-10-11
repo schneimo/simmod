@@ -1,1 +1,1 @@
-from simmod.wrappers.wrappers import UDRMujocoWrapper
+from simmod.wrappers.alg_wrappers import UDRMujocoWrapper

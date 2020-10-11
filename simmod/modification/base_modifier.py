@@ -8,7 +8,7 @@ import numpy as np
 from simmod.common.parametrization import Parametrization
 
 
-# TODO: Create a default config files
+# TODO: Create default config files
 
 
 class BaseModifier(ABC):
@@ -38,20 +38,25 @@ class BaseModifier(ABC):
 
         default = self._get_default_from_config(config)
         self.instrumentation = list()
+        execution_point = config['options']['execution']
         for setter in config:
+
+            if setter == 'options':
+                continue
+
             assert setter in self.standard_setters.keys(), "Unknown setter function %s" % setter
             object_names = config[setter].keys()
             for object_name in object_names:
                 if object_name == 'default':
                     continue
                 range_val = config[setter][object_name]
-                mod_inst = Parametrization(setter, object_name, range_val)
+                mod_inst = Parametrization(setter, object_name, range_val, execution_point)
                 self.instrumentation.append(mod_inst)
 
             diff = list(set(self.names) - set(object_names))
             for object_name in diff:
                 default_range_val = default[setter]
-                mod_inst = Parametrization(setter, object_name, default_range_val)
+                mod_inst = Parametrization(setter, object_name, default_range_val, execution_point)
                 self.instrumentation.append(mod_inst)
 
     def _get_basic_config(self) -> Dict:

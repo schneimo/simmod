@@ -83,7 +83,8 @@ class ActionModifier(BaseModifier):
     def latency_step(self, action):
         if self._buffer_actions_len > 1:
             # Delay the actions.
-            self._buffer_actions, action = self.delayed_buffer_item(self._buffer_actions, self._buffer_actions_len,
+            self._buffer_actions, action = self.delayed_buffer_item(self._buffer_actions,
+                                                                    self._buffer_actions_len,
                                                                     action)
         return action
 

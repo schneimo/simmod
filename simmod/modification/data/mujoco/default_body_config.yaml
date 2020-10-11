@@ -1,4 +1,6 @@
 ---
+options:
+  execution: 'RESET'
 mass:
   default:
     - [0, .inf]

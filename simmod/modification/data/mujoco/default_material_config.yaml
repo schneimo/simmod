@@ -1,4 +1,6 @@
 ---
+options:
+  execution: 'RESET'
 specular:
   default:
     - [0.1, 0.3]
