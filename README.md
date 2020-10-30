@@ -1,3 +1,5 @@
+# SimMod - A Framework for Simulation Modification
+
 ## Installation
 - Clone the repo and cd into it:
     ```bash
