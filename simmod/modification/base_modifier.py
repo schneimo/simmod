@@ -46,18 +46,21 @@ class BaseModifier(ABC):
 
             assert setter in self.standard_setters.keys(), "Unknown setter function %s" % setter
             object_names = config[setter].keys()
+            use_default = False
             for object_name in object_names:
                 if object_name == 'default':
+                    use_default = True
                     continue
                 range_val = config[setter][object_name]
                 mod_inst = Parametrization(setter, object_name, range_val, execution_point)
                 self.instrumentation.append(mod_inst)
 
-            diff = list(set(self.names) - set(object_names))
-            for object_name in diff:
-                default_range_val = default[setter]
-                mod_inst = Parametrization(setter, object_name, default_range_val, execution_point)
-                self.instrumentation.append(mod_inst)
+            if use_default:
+                diff = list(set(self.names) - set(object_names))
+                for object_name in diff:
+                    default_range_val = default[setter]
+                    mod_inst = Parametrization(setter, object_name, default_range_val, execution_point)
+                    self.instrumentation.append(mod_inst)
 
     def _get_basic_config(self) -> Dict:
         import os

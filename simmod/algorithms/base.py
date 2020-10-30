@@ -6,7 +6,7 @@ from simmod.common.parametrization import Execution
 
 import typing as tp
 
-EXECUTION_POINTS = tp.Union[Execution.BEFORE_STEP, Execution.AFTER_STEP, Execution.RESET]
+EXECUTION_POINTS = tp.Union[Execution]
 
 
 class BaseAlgorithm(ABC):
@@ -18,9 +18,12 @@ class BaseAlgorithm(ABC):
     def _randomize_object(self, modifier: BaseModifier, instrumentation: Parametrization, **kwargs) -> None:
         pass
 
-    def step(self, execution: EXECUTION_POINTS, **kwargs) -> None:
+    def step(self, execution: EXECUTION_POINTS = 'RESET', **kwargs) -> None:
         input = kwargs
         for modifier in self.modifiers:
             for instrumentation in modifier.instrumentation:
-                input = self._randomize_object(modifier, instrumentation, **input)
+                if input is None:
+                    input = self._randomize_object(modifier, instrumentation)
+                else:
+                    input = self._randomize_object(modifier, instrumentation, **dict(input))
         return input

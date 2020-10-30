@@ -159,3 +159,4 @@ if __name__ == "__main__":
     test_mujoco_body_modifier_friction()
     test_mujoco_joint_modifier_damping()
     test_mujoco_body_modifier_mass()
+    print('Congratulations! No errors!')

@@ -1,11 +1,14 @@
 from inspect import signature
-from typing import Any
+from typing import Any, Union
 
 import numpy as np
 
 from simmod.algorithms.base import BaseAlgorithm
 from simmod.common.parametrization import Parametrization
 from simmod.modification.base_modifier import BaseModifier
+from simmod.common.parametrization import Execution
+
+EXECUTION_POINTS = Union[Execution]
 
 
 class UniformDomainRandomization(BaseAlgorithm):
@@ -41,3 +44,9 @@ class UniformDomainRandomization(BaseAlgorithm):
         for _ in range(n_params):
             val.append(np.array([self.random_state.uniform(lower_bound[i], upper_bound[i]) for i in range(n)]))
         return setter_func(object_name, *val, **kwargs)
+
+    def step(self, execution: EXECUTION_POINTS = 'RESET', **kwargs) -> None:
+        for modifier in self.modifiers:
+            for instrumentation in modifier.instrumentation:
+                self._randomize_object(modifier, instrumentation)
+
