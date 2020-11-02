@@ -38,7 +38,7 @@ class BaseModifier(ABC):
 
         default = self._get_default_from_config(config)
         self.instrumentation = list()
-        execution_point = config['options']['execution']
+        self.execution_point = execution_point = config['options']['execution']
         for setter in config:
 
             if setter == 'options':
