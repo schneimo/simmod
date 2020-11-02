@@ -749,10 +749,10 @@ class MujocoActuatorModifier(MujocoBaseModifier):
         actuatorid = self._get_actuatorid(name)
 
         if isinstance(value, float):
-            value = [value, 0, 0, 0, 0, 0]
+            value = [value, 0.0, 0.0, 0.0, 0.0, 0.0]
         elif len(value) < 6:
             assert len(value) <= 6, "Expectd value of max. length 6, instead got %s" % value
-            value = [value[i] if i < len(value) else 0 for i in range(6)]
+            value = [value[i] if i < len(value) else 0.0 for i in range(6)]
 
         self.model.actuator_gear[actuatorid] = value
         self.sim.set_constants()

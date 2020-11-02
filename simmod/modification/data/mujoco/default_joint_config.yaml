@@ -6,22 +6,18 @@ pos:
     - [-.Inf, .inf]
     - [-.Inf, .inf]
     - [-.Inf, .inf]
-range:
-  default:
-    - [-.Inf, .inf]
-    - [-.Inf, .inf]
 damping:
   default:
-    - [0, .inf]
+    - [0.0, .inf]
 armature:
   default:
-    - [0, .inf]
+    - [0.0, .inf]
 frictionloss:
   default:
-    - [0, .inf]
+    - [0.0, .inf]
 stiffness:
   default:
-    - [0, .inf]
+    - [0.0, .inf]
 quat:
   default:
     - [-.Inf, .inf]

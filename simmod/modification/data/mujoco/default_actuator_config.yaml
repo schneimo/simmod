@@ -1,0 +1,14 @@
+---
+options:
+  execution: 'RESET'
+gear:
+  default:
+    - [0, .inf]
+ctrlrange:
+  default:
+    - [-.Inf, .inf]
+    - [-.Inf, .inf]
+forcerange:
+  default:
+    - [-.Inf, .inf]
+    - [-.Inf, .inf]
