@@ -16,12 +16,12 @@ class UDRMujocoWrapper(gym.Wrapper):
         self.alg = UniformDomainRandomization(*modifiers)
 
     def step(self, action):
-        action = self.alg.step(Execution.BEFORE_STEP, action=action)
+        #action = self.alg.step(Execution.BEFORE_STEP, action=action)
 
         observation, reward, done, info = self.env.step(action)
 
-        observation, reward, done, info = self.alg.step(execution=Execution.AFTER_STEP,
-                                                        observation=observation, reward=reward, done=done, info=info)
+        #observation, reward, done, info = self.alg.step(execution=Execution.RESET,
+        #                                                observation=observation, reward=reward, done=done, info=info)
         return observation, reward, done, info
 
     def reset(self, **kwargs):

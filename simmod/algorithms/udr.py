@@ -49,4 +49,3 @@ class UniformDomainRandomization(BaseAlgorithm):
         for modifier in self.modifiers:
             for instrumentation in modifier.instrumentation:
                 self._randomize_object(modifier, instrumentation)
-

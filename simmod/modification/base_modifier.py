@@ -1,11 +1,10 @@
-import json
-import yaml
 from abc import ABC, abstractmethod
 from typing import List, Dict
 
 import numpy as np
 
 from simmod.common.parametrization import Parametrization
+from simmod.utils.load_utils import load_yaml
 
 
 # TODO: Create default config files
@@ -66,9 +65,7 @@ class BaseModifier(ABC):
         import os
         path = os.path.dirname(__file__)
         path = os.path.join(path, self._default_config_file_path)
-        with open(path) as json_file:
-            data = yaml.load(json_file, Loader=yaml.FullLoader)
-        return data
+        return load_yaml(path)
 
     @staticmethod
     def _get_default_from_config(config: Dict) -> Dict:

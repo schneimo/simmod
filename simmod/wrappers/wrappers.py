@@ -7,6 +7,18 @@ import numpy as np
 from simmod.modification.base_modifier import BaseModifier
 
 
+def delayed_buffer_item(buffer_item, buffer_item_len, item):
+    """Maintains delays using lists."""
+    item_copy = copy.copy(item)
+    if buffer_item is None:
+        buffer_item = buffer_item_len * [item_copy]
+    else:
+        buffer_item.append(item_copy)
+    item_cur = copy.copy(buffer_item.pop(0))
+
+    return buffer_item, item_cur
+
+
 class BuiltInModifier(BaseModifier):
 
     def __init__(self, sim, *args, **kwargs):
@@ -30,14 +42,17 @@ class ActionWrapper(gym.ActionWrapper):
     def __init__(self,
                  env,
                  noise_process: Optional[Callable] = None,
-                 action_latency: int = 1,
+                 min_action_latency: int = 1,
+                 max_action_latency: int = 3,
                  *args, **kwargs):
         super().__init__(env)
 
         self.action_shape = self.action_space.shape
         self._noise_process = np.random.normal if noise_process is None else noise_process
         self._buffer_actions = None
-        self._buffer_actions_len = action_latency # in timesteps
+        self.min_action_latency = min_action_latency
+        self.max_action_latency = max_action_latency
+        self._buffer_actions_len = np.random.randint(min_action_latency, max_action_latency+1)  # in timesteps
 
     def _get_shape(self):
         raise self.action_shape
@@ -59,23 +74,15 @@ class ActionWrapper(gym.ActionWrapper):
     def _get_noise(self):
         return self._noise_process(self.action_shape)
 
-    def delayed_buffer_item(self, buffer_item, buffer_item_len, item):
-        """Maintains delays using lists."""
-        item_copy = copy.copy(item)
-        if buffer_item is None:
-            buffer_item = buffer_item_len * [item_copy]
-        else:
-            buffer_item.append(item_copy)
-        item_cur = copy.copy(buffer_item.pop(0))
-
-        return buffer_item, item_cur
-
     def latency_step(self, action):
         if self._buffer_actions_len > 1:
             # Delay the actions.
-            self._buffer_actions, action = self.delayed_buffer_item(self._buffer_actions,
-                                                                    self._buffer_actions_len,
-                                                                    action)
+            self._buffer_actions, action = delayed_buffer_item(
+                self._buffer_actions,
+                self._buffer_actions_len,
+                action
+            )
+
         return action
 
     def noise_step(self, action):
@@ -86,6 +93,11 @@ class ActionWrapper(gym.ActionWrapper):
 
     def repetition_step(self, action):
         raise NotImplementedError
+
+    def reset(self, **kwargs):
+        self._buffer_actions = None
+        self._buffer_actions_len = np.random.randint(self.min_action_latency, self.max_action_latency + 1)
+        return self.env.reset(**kwargs)
 
     def action(self, action):
         action = self.latency_step(action)
@@ -99,7 +111,7 @@ class ObservationWrapper(gym.ObservationWrapper):
                  noise_process: Optional[Callable] = None,
                  *args, **kwargs):
         super().__init__(env)
-        self.observation_shape = self.sim.observation_space.shape
+        self.observation_shape = self.observation_space.shape
         self._noise_process = np.random.normal if noise_process is None else noise_process
 
     @property
