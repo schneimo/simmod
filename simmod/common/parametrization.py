@@ -46,6 +46,10 @@ class Parametrization:
         self.upper_bound = parameter_range.T[1]
         self.name = name
 
+    @property
+    def parameter_range(self):
+        return (self.lower_bound, self.upper_bound)
+
     def get_json(self) -> Dict:
         result = {
             self.setter: {

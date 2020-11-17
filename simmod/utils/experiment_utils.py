@@ -36,7 +36,7 @@ class ExperimentScheduler:
         """
         mujoco_sim = env.unwrapped.qube.sim
         modifiers = list()
-        for modifier_cls, modifier_config in config:
+        for modifier_cls, modifier_config, _ in config:
             mod = modifier_cls(sim=mujoco_sim, config=modifier_config)
             modifiers.append(mod)
         return modifiers

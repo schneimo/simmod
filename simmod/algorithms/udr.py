@@ -12,6 +12,11 @@ EXECUTION_POINTS = Union[Execution]
 
 
 class UniformDomainRandomization(BaseAlgorithm):
+    """
+    Given a number of modifiers each with a number of instrumentations, the algorithm changes the parameters (specified
+    in the instrumentation) of the underlying simulation. The simulation itself is not needed since it is connected
+    via the modifiers.
+    """
 
     def __init__(self, *modifiers: BaseModifier, random_state=None, **kwargs: Any) -> None:
         if random_state is None:
@@ -24,6 +29,19 @@ class UniformDomainRandomization(BaseAlgorithm):
         super().__init__(*modifiers, **kwargs)
 
     def _randomize_object(self, modifier: BaseModifier, instrumentation: Parametrization, **kwargs) -> None:
+        """Randomize the parameter of an object (both defined in the instrumentation variable) with
+        the given modifier.
+
+        The randomization is performed by sampling from a uniform distribution with upper and lower bounds defined in
+        the instrumentation variable.
+
+        Args:
+            modifier:           Modifier to change the parameter defined in the instrumentation
+            instrumentation:    Configuration of the parameter we want  change
+            **kwargs:           Additional arguments for the setter function of the modifier
+
+        Returns:                Return of the setter function of the modifier
+        """
         object_name = instrumentation.object_name
         setter_func = modifier.standard_setters[instrumentation.setter]
 
@@ -38,12 +56,14 @@ class UniformDomainRandomization(BaseAlgorithm):
 
         lower_bound = instrumentation.lower_bound
         upper_bound = instrumentation.upper_bound
-        val = list()
+        new_values = list()
         assert len(lower_bound) == len(upper_bound)
         n = len(lower_bound)
         for _ in range(n_params):
-            val.append(np.array([self.random_state.uniform(lower_bound[i], upper_bound[i]) for i in range(n)]))
-        return setter_func(object_name, *val, **kwargs)
+            values = np.array([self.random_state.uniform(lower_bound[i], upper_bound[i]) for i in range(n)])
+            new_values.append(values)
+        self._record_new_val(modifier, instrumentation, new_values)
+        return setter_func(object_name, *new_values, **kwargs)
 
     def step(self, execution: EXECUTION_POINTS = 'RESET', **kwargs) -> None:
         for modifier in self.modifiers:
