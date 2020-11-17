@@ -1,0 +1,8 @@
+---
+options:
+  execution: 'RESET'
+mass:
+  pole:
+    - [0.018, 0.03]
+  arm:
+    - [0.05175, 0.08625]

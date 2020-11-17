@@ -6,8 +6,9 @@ from mujoco_py import load_model_from_xml, MjSim, MjViewer
 
 from simmod.algorithms import UniformDomainRandomization
 from simmod.modification.mujoco import MujocoMaterialModifier
-from simmod.modification.mujoco import MujocoTextureModifier
+from simmod.modification.mujoco import MujocoTextureModifier, MujocoBodyModifier
 import xml.etree.ElementTree as ET
+import yaml
 
 MODEL_STRING = """
 <?xml version="1.0" encoding="utf-8"?>
@@ -60,11 +61,21 @@ model = load_model_from_xml(MODEL_STRING)
 sim = MjSim(model)
 viewer = MjViewer(sim)
 
-mod_tex = MujocoTextureModifier(sim=sim)
-mod_mat = MujocoMaterialModifier(sim=sim)
-alg = UniformDomainRandomization(mod_tex, mod_mat)
+#mod_tex = MujocoTextureModifier(sim=sim)
+#mod_mat = MujocoMaterialModifier(sim=sim)
+
+with open('./assets/body_text.yaml') as json_file:
+    config = yaml.load(json_file, Loader=yaml.FullLoader)
+
+mod_body = MujocoBodyModifier(sim=sim, config=config)
+pole_id = mod_body.model.body_name2id('pole')
+arm_id = mod_body.model.body_name2id('arm')
+alg = UniformDomainRandomization(mod_body)
 
 while True:
+    "---------------------------------------"
+    print(mod_body.model.body_mass[pole_id])
+    print(mod_body.model.body_mass[arm_id])
     for _ in range(300):
         sim.data.ctrl[:] = 0
         sim.step()
