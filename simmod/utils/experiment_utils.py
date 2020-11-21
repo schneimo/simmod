@@ -1,3 +1,7 @@
+"""
+Copyright (c) 2020, Moritz Schneider
+@Author: Moritz Schneider
+"""
 from simmod.modification.mujoco import *
 from simmod.utils.load_utils import load_yaml
 import os

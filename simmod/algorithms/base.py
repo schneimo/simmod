@@ -1,3 +1,7 @@
+"""
+Copyright (c) 2020, Moritz Schneider
+@Author: Moritz Schneider
+"""
 from abc import ABC, abstractmethod
 
 from simmod.common.parametrization import Parametrization

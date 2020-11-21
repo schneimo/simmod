@@ -3,6 +3,9 @@ Modification Framework for the Mujoco simulator based on mujoco-py library.
 
 Unadapted version from:
 https://github.com/openai/mujoco-py/blob/master/mujoco_py/modder.py
+
+Copyright (c) 2020, Moritz Schneider
+@Author: Moritz Schneider
 """
 
 from collections import defaultdict

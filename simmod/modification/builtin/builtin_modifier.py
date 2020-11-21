@@ -1,3 +1,7 @@
+"""
+Copyright (c) 2020, Moritz Schneider
+@Author: Moritz Schneider
+"""
 from typing import List, Dict, Optional, Callable, Tuple
 
 import gym

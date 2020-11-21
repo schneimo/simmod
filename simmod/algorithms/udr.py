@@ -1,3 +1,7 @@
+"""
+Copyright (c) 2020, Moritz Schneider
+@Author: Moritz Schneider
+"""
 from inspect import signature
 from typing import Any, Union
 

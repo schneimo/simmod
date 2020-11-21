@@ -1,3 +1,7 @@
+"""
+Copyright (c) 2020, Moritz Schneider
+@Author: Moritz Schneider
+"""
 from abc import ABC
 from typing import Union, List, Callable, AnyStr, Tuple, Any, Dict, Optional
 from enum import Enum, auto
