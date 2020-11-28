@@ -1,5 +1,9 @@
-# utility functions for manipulating MJCF XML models
+"""
+Utility functions for manipulating MJCF XML models
 
+Copyright (c) 2020, Moritz Schneider
+@Author: Moritz Schneider
+"""
 import xml.etree.ElementTree as ET
 import os
 import numpy as np
