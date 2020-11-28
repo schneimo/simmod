@@ -1,0 +1,6 @@
+---
+options:
+  execution: 'RESET'
+value:
+  default:
+    - [-.Inf, .inf]

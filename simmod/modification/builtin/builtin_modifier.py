@@ -10,18 +10,24 @@ from simmod.modification.base_modifier import BaseModifier
 class BuiltInModifier(BaseModifier):
 
     def __init__(self, sim, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        self._default_config_file_path = 'data/builtin/default_config.yaml'
         self.sim = sim
+        super().__init__(*args, **kwargs)
 
     @property
     def standard_setters(self) -> Dict:
-        pass
+        setters = {
+            "value": self.set_value,
+        }
+        return setters
 
     @property
     def names(self) -> List:
-        pass
+        return list(self.sim.__dict__.keys())
 
     def set_value(self, name: str, value):
+        if name not in self.names:
+            raise ValueError(f"Cannot find attribute '{name}' in class '{self.sim.__class__.__name__}'")
         setattr(self.sim, name, value)
 
 
