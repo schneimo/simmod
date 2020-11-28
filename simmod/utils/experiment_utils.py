@@ -2,7 +2,10 @@
 Copyright (c) 2020, Moritz Schneider
 @Author: Moritz Schneider
 """
+from simmod import modification
+from simmod.modification import mujoco, builtin
 from simmod.modification.mujoco import *
+from simmod.modification.builtin import *
 from simmod.utils.load_utils import load_yaml
 import os
 import typing as tp
@@ -38,12 +41,18 @@ class ExperimentScheduler:
         Returns:    List of created modifiers
 
         """
-        mujoco_sim = env.unwrapped.qube.sim
         modifiers = list()
         for modifier_cls, modifier_config, _ in config:
-            mod = modifier_cls(sim=mujoco_sim, config=modifier_config)
+            mod = self._get_modifier(modifier_cls, env, modifier_config)
             modifiers.append(mod)
         return modifiers
+
+    def _get_modifier(self, modifier_cls, env, modifier_config):
+        if issubclass(modifier_cls, BuiltInModifier):
+            return modifier_cls(sim=env.qube, config=modifier_config) # TODO: env.qube not standartized
+        elif issubclass(modifier_cls, mujoco.mujoco_modifier.MujocoBaseModifier):
+            mujoco_sim = env.unwrapped.qube.sim
+            return modifier_cls(sim=mujoco_sim, config=modifier_config)
 
     def create_wrapper(self, config):
         pass

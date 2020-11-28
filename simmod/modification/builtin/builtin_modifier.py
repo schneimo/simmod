@@ -32,7 +32,13 @@ class BuiltInModifier(BaseModifier):
     def set_value(self, name: str, value):
         if name not in self.names:
             raise ValueError(f"Cannot find attribute '{name}' in class '{self.sim.__class__.__name__}'")
-        setattr(self.sim, name, value)
+        attr = getattr(self.sim, name)
+        if isinstance(attr, tuple):
+            value = tuple(value)
+        elif isinstance(attr, float) or isinstance(attr, int):
+            assert len(value) == 1
+            value = value[0]
+        setattr(self.sim, name, value) # TODO: Make sure that value is not a list type if it a float
 
 
 class ActionModifier(BaseModifier):

@@ -794,13 +794,15 @@ class MujocoOptionModifier(MujocoBaseModifier):
         }
         return setters
 
-    def set_gravity(self, value: Union[float, Array]) -> None:
-
+    def set_gravity(self, name: AnyStr, value: Union[float, Array]) -> None:
         if isinstance(value, float):
             value = [0, 0, value]
         elif len(value) < 3:
             assert len(value) <= 3, "Expected value of max. length 3, instead got %s" % value
-            value = reversed([value[i] if i < len(value) else 0 for i in range(3)])
-
-        self.model.opt.gravity = value
+            value = list(reversed([value[i] if i < len(value) else 0 for i in range(3)]))
+        elif len(value) == 3:
+            pass
+        else:
+            raise ValueError
+        self.model.opt.gravity[:] = value[:]
 
