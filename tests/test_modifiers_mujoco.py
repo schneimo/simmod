@@ -120,7 +120,17 @@ def test_mujoco_body_modifier_friction():
 ######################   JOINT   ######################
 
 def test_mujoco_joint_modifier_damping():
+    # Create the trajectory with the modifier which should be the same as the XML generated trajectory
+    #
+    model = load_model_from_path(TEST_MODEL_FURUTA_PATH)
+    sim = MjSim(model)
+    jnt_mod = MujocoJointModifier(sim)
+    jnt_mod.set_damping("arm_pole", 3e-4)
+    sim.set_constants()
+    traj_mod = np.asarray(start_trajectory(sim))
+
     # Create the trajectory by changing the XML
+    del sim, model, jnt_mod
     tree = ET.parse(TEST_MODEL_FURUTA_PATH)
     model_xml = tree.getroot()
     worldbody = model_xml.find('worldbody')
@@ -133,15 +143,6 @@ def test_mujoco_joint_modifier_damping():
     model = load_model_from_xml(model_string)
     sim = MjSim(model)
     traj_xml = np.asarray(start_trajectory(sim))
-
-    # Create the trajectory with the modifier which should be the same as the XML generated trajectory
-    del sim, model
-    model = load_model_from_path(TEST_MODEL_FURUTA_PATH)
-    sim = MjSim(model)
-    jnt_mod = MujocoJointModifier(sim)
-    jnt_mod.set_damping("arm_pole", 3e-4)
-    sim.set_constants()
-    traj_mod = np.asarray(start_trajectory(sim))
     assert np.sum(traj_mod - traj_xml) == 0.0
 
     # Create another trajectory with the modifier which should be different now

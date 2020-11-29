@@ -662,6 +662,7 @@ class MujocoBodyModifier(MujocoBaseModifier, InertialModifier):
             "mass": self.set_mass,
             "diaginertia": self.set_diaginertia,
             "pos": self.set_pos,
+            "ipos": self.set_ipos,
             "quat": self.set_quat,
             "friction": self.set_friction,
         }
@@ -677,6 +678,13 @@ class MujocoBodyModifier(MujocoBaseModifier, InertialModifier):
                 "Expected value of length 3, instead got %s" % value)
         bodyid = self._get_bodyid(name)
         self.model.body_pos[bodyid] = value
+
+    def set_ipos(self, name: AnyStr, value: Array) -> None:
+        value = list(value)
+        assert len(value) == 3, (
+                "Expected value of length 3, instead got %s" % value)
+        bodyid = self._get_bodyid(name)
+        self.model.body_ipos[bodyid] = value
 
     def set_mass(self, name: AnyStr, value: float) -> None:
         bodyid = self._get_bodyid(name)
