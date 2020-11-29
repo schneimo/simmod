@@ -719,7 +719,7 @@ class MujocoBodyModifier(MujocoBaseModifier, InertialModifier):
 
     def set_quat(self, name, value: Array) -> None:
         value = list(value)
-        assert len(value) == 4, "Expectd value of length 4, instead got %s" % value
+        assert len(value) == 4, "Expected value of length 4, instead got %s" % value
         bodyid = self._get_bodyid(name)
         assert bodyid > -1, "Unknown joint %s" % name
         self.model.body_quat[bodyid] = value
@@ -754,7 +754,7 @@ class MujocoActuatorModifier(MujocoBaseModifier):
         if isinstance(value, float):
             value = [value, 0.0, 0.0, 0.0, 0.0, 0.0]
         elif len(value) < 6:
-            assert len(value) <= 6, "Expectd value of max. length 6, instead got %s" % value
+            assert len(value) <= 6, "Expected value of max. length 6, instead got %s" % value
             value = [value[i] if i < len(value) else 0.0 for i in range(6)]
 
         self.model.actuator_gear[actuatorid] = value
@@ -763,7 +763,7 @@ class MujocoActuatorModifier(MujocoBaseModifier):
     def set_forcerange(self, name: AnyStr, value: Array) -> None:
         actuatorid = self._get_actuatorid(name)
 
-        assert len(value) == 2, "Expectd value of length 2, instead got %s" % value
+        assert len(value) == 2, "Expected value of length 2, instead got %s" % value
 
         self.model.actuator_forcerange[actuatorid] = value
         self.sim.set_constants()
@@ -771,7 +771,7 @@ class MujocoActuatorModifier(MujocoBaseModifier):
     def set_ctrlrange(self, name: AnyStr, value: Array) -> None:
         actuatorid = self._get_actuatorid(name)
 
-        assert len(value) == 2, "Expectd value of length 2, instead got %s" % value
+        assert len(value) == 2, "Expected value of length 2, instead got %s" % value
 
         self.model.actuator_ctrlrange[actuatorid] = value
         self.sim.set_constants()
@@ -805,4 +805,5 @@ class MujocoOptionModifier(MujocoBaseModifier):
         else:
             raise ValueError
         self.model.opt.gravity[:] = value[:]
+        self.sim.set_constants()
 

@@ -23,28 +23,10 @@ def delayed_buffer_item(buffer_item, buffer_item_len, item):
     return buffer_item, item_cur
 
 
-class BuiltInModifier(BaseModifier):
-
-    def __init__(self, sim, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.sim = sim
-
-    @property
-    def standard_setters(self) -> Dict:
-        pass
-
-    @property
-    def names(self) -> List:
-        pass
-
-    def set_value(self, name: str, value):
-        setattr(self.sim, name, value)
-
-
 class ActionWrapper(gym.ActionWrapper):
 
     def __init__(self,
-                 env,
+                 env: gym.Env,
                  noise_process: Optional[Callable] = None,
                  min_action_latency: int = 1,
                  max_action_latency: int = 3,
@@ -52,10 +34,9 @@ class ActionWrapper(gym.ActionWrapper):
         super().__init__(env)
 
         self.action_shape = self.action_space.shape
+        self.min_action_latency, self.max_action_latency = min_action_latency, max_action_latency
         self._noise_process = np.random.normal if noise_process is None else noise_process
         self._buffer_actions = None
-        self.min_action_latency = min_action_latency
-        self.max_action_latency = max_action_latency
         self._buffer_actions_len = np.random.randint(min_action_latency, max_action_latency+1)  # in timesteps
 
     def _get_shape(self):
@@ -109,10 +90,41 @@ class ActionWrapper(gym.ActionWrapper):
         return action
 
 
+class _WelfordsAlgorithm:
+
+    def __init__(self, mean_init: int = 0.):
+        self.current_aggregate = (0, mean_init, 0.)
+
+    def update(self, new_value):
+        # For a new value newValue, compute the new count, new mean, the new M2.
+        # mean accumulates the mean of the entire dataset
+        # M2 aggregates the squared distance from the mean
+        # count aggregates the number of samples seen so far
+        (count, mean, M2) = self.current_aggregate
+        count += 1
+        delta = new_value - mean
+        mean += delta / count
+        delta2 = new_value - mean
+        M2 += delta * delta2
+        self.current_aggregate = (count, mean, M2)
+        return self.get_stats()
+
+    # Retrieve the mean, variance and sample variance from an aggregate
+    def get_stats(self):
+        (count, mean, M2) = self.current_aggregate
+        if count < 2:
+            return float("nan")
+        else:
+            (mean, variance, sampleVariance) = (mean, M2 / count, M2 / (count - 1))
+            return (mean, variance, sampleVariance)
+
+
 class ObservationWrapper(gym.ObservationWrapper):
 
-    def __init__(self, env,
+    def __init__(self,
+                 env: gym.Env,
                  noise_process: Optional[Callable] = None,
+                 noise_range: List = None,
                  *args, **kwargs):
         super().__init__(env)
         self.observation_shape = self.observation_space.shape
@@ -130,7 +142,7 @@ class ObservationWrapper(gym.ObservationWrapper):
         return setters
 
     def _get_noise(self):
-        return self._noise_process(self.observation_shape)
+        return self._noise_process(size=self.observation_shape)
 
     def observation(self, observation):
         return observation + self._get_noise()

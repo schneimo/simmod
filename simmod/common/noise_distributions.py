@@ -72,13 +72,14 @@ class NormalNoise(Noise):
     :param sigma: (float) the scale of the noise (std here)
     """
 
-    def __init__(self, mean, sigma):
+    def __init__(self, mean, sigma, shape):
         super().__init__()
         self._mu = mean
         self._sigma = sigma
+        self.shape = shape
 
     def __call__(self) -> np.ndarray:
-        return np.random.normal(self._mu, self._sigma)
+        return np.random.normal(self._mu, self._sigma, size=self.shape)
 
     def __repr__(self) -> str:
         return 'NormalActionNoise(mu={}, sigma={})'.format(self._mu, self._sigma)
