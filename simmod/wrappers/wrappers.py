@@ -54,14 +54,12 @@ class _WelfordsAlgorithm:
 
 class _Range:
 
-    def __init__(self, init_high=0.0, fixed_high=False, init_low = 0.0, fixed_low=False):
-        self.high = init_high
-        self.low = init_low
-        self.fixed_high = fixed_high
-        self.fixed_low = fixed_low
+    def __init__(self, init_high=0.0, fixed_high=False, init_low=0.0, fixed_low=False):
+        self.low, self.high = init_low, init_high
+        self.fixed_low, self.fixed_high = fixed_low, fixed_high
 
     def update(self, new_value):
-        if self.fixed_low and self.fixed_high:
+        if not self.fixed_low and not self.fixed_high:
             self.high = new_value if self.high < new_value else self.high
             self.low = -self.high
         elif self.fixed_high:
@@ -96,8 +94,8 @@ class _Noise():
         for low, high in zip(space.low, space.high):
             fixed_high = high != np.inf
             fixed_low = low != -np.inf
-            low = 0 if not fixed_low else low
-            high = 0 if not fixed_high else high
+            low = 0.0 if not fixed_low else low
+            high = 0.0 if not fixed_high else high
             self._noise_range.append(_Range(high, fixed_high, low, fixed_low))
 
     def _update(self, values):
