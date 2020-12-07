@@ -71,15 +71,17 @@ class _Range:
         return self.high - self.low
 
 
-class _Noise():
+class _NoiseWrapper(gym.Wrapper):
 
     def __init__(self,
+                 env,
                  space,
                  noise_process: Optional[Callable] = None,
                  noise_scale: Union[List, float] = 1.,
                  noise_baseline: Optional[str] = 'range',
                  dtype=np.float32,
                  *args, **kwargs):
+        super().__init__(env)
         self.dtype = np.dtype(dtype)
         self.shape = space.shape
         self._noise_process = np.random.normal if noise_process is None else noise_process
@@ -110,7 +112,7 @@ class _Noise():
         return self.noise_scale * noise
 
 
-class ActionWrapper(gym.ActionWrapper, _Noise):
+class ActionWrapper(_NoiseWrapper):
 
     def __init__(self,
                  env: gym.Env,
@@ -121,8 +123,7 @@ class ActionWrapper(gym.ActionWrapper, _Noise):
                  max_action_latency: int = 3,
                  dtype=np.float32,
                  *args, **kwargs):
-        super(gym.ActionWrapper).__init__(env)
-        super(_Noise).__init__(self.action_space, noise_process, noise_scale, noise_baseline, dtype, *args,
+        super().__init__(env, env.action_space, noise_process, noise_scale, noise_baseline, dtype, *args,
                                **kwargs)
         self.dtype = np.dtype(dtype)
 
@@ -170,6 +171,9 @@ class ActionWrapper(gym.ActionWrapper, _Noise):
         self._buffer_actions_len = np.random.randint(self.min_action_latency, self.max_action_latency + 1)
         return self.env.reset(**kwargs)
 
+    def step(self, action):
+        return self.env.step(self.action(action))
+
     def action(self, action):
         action = self.latency_step(action)
         self._update(action)
@@ -177,7 +181,7 @@ class ActionWrapper(gym.ActionWrapper, _Noise):
         return action
 
 
-class ObservationWrapper(gym.ObservationWrapper, _Noise):
+class ObservationWrapper(_NoiseWrapper):
 
     def __init__(self,
                  env: gym.Env,
@@ -186,13 +190,16 @@ class ObservationWrapper(gym.ObservationWrapper, _Noise):
                  noise_baseline: Optional[str] = 'range',
                  dtype=np.float32,
                  *args, **kwargs):
-        super(gym.ObservationWrapper).__init__(env)
-        super(_Noise).__init__(self.observation_space, noise_process, noise_scale, noise_baseline, dtype, *args, **kwargs)
+        super().__init__(env, env.observation_space, noise_process, noise_scale, noise_baseline, dtype, *args, **kwargs)
         self.dtype = np.dtype(dtype)
 
     @property
     def names(self) -> List:
         return ["observation"]
+
+    def step(self, action):
+        observation, reward, done, info = self.env.step(action)
+        return self.observation(observation), reward, done, info
 
     def observation(self, observation):
         self._update(observation)
