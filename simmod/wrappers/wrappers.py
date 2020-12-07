@@ -76,7 +76,7 @@ class _Noise():
     def __init__(self,
                  space,
                  noise_process: Optional[Callable] = None,
-                 noise_scale: Optional[List, float] = 1.,
+                 noise_scale: Union[List, float] = 1.,
                  noise_baseline: Optional[str] = 'range',
                  dtype=np.float32,
                  *args, **kwargs):
@@ -182,7 +182,7 @@ class ObservationWrapper(gym.ObservationWrapper, _Noise):
     def __init__(self,
                  env: gym.Env,
                  noise_process: Optional[Callable] = None,
-                 noise_scale: Optional[List, float] = 1.,
+                 noise_scale: Union[List, float] = 1.,
                  noise_baseline: Optional[str] = 'range',
                  dtype=np.float32,
                  *args, **kwargs):
