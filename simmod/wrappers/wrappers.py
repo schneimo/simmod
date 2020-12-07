@@ -2,7 +2,7 @@
 Copyright (c) 2020, Moritz Schneider
 @Author: Moritz Schneider
 """
-from typing import List, Dict, Optional, Callable, Tuple
+from typing import List, Dict, Optional, Callable, Tuple, Union
 
 import gym
 import copy
@@ -115,7 +115,7 @@ class ActionWrapper(gym.ActionWrapper, _Noise):
     def __init__(self,
                  env: gym.Env,
                  noise_process: Optional[Callable] = None,
-                 noise_scale: Optional[List, float] = 1.,
+                 noise_scale: Union[List, float] = 1.,
                  noise_baseline: Optional[str] = 'range',
                  min_action_latency: int = 1,
                  max_action_latency: int = 3,
