@@ -78,6 +78,40 @@ def test_mujoco_body_modifier_mass():
     assert np.sum(traj_mod - traj_xml) != 0.0
 
 
+def test_mujoco_body_modifier_inertia():
+    # Create the trajectory by changing the XML
+    tree = ET.parse(TEST_MODEL_FURUTA_PATH)
+    model_xml = tree.getroot()
+    worldbody = model_xml.find('worldbody')
+    body = find_body(worldbody, 'pole')
+    inertia = body.find('inertial')
+    inertia.set('diaginertia', "5e-05 5e-05 5e-07")
+    model_string = ET.tostring(model_xml, encoding='unicode', method='xml')
+    model = load_model_from_xml(model_string)
+    sim = MjSim(model)
+    traj_xml = np.asarray(start_trajectory(sim))
+
+    # Create the trajectory with the modifier which should be the same as the XML generated trajectory
+    del sim, model, model_string, tree
+    model = load_model_from_path(TEST_MODEL_FURUTA_PATH)
+    sim = MjSim(model)
+    body_mod = MujocoBodyModifier(sim)
+    body_mod.set_diaginertia("pole", [5e-05, 5e-05, 5e-07])
+    sim.set_constants()
+    traj_mod = np.asarray(start_trajectory(sim))
+    assert np.sum(traj_mod - traj_xml) == 0.0
+
+    # Create another trajectory with the modifier which should be different now
+    del sim, model, body_mod, traj_mod
+    model = load_model_from_path(TEST_MODEL_FURUTA_PATH)
+    sim = MjSim(model)
+    body_mod = MujocoBodyModifier(sim)
+    body_mod.set_diaginertia("pole", [6e-05, 6e-05, 6e-07])
+    sim.set_constants()
+    traj_mod = np.asarray(start_trajectory(sim))
+    assert np.sum(traj_mod - traj_xml) != 0.0
+
+
 def test_mujoco_body_modifier_friction():
     # Create the trajectory by changing the XML
     tree = ET.parse(TEST_MODEL_FRICTION_PATH)
@@ -146,7 +180,7 @@ def test_mujoco_joint_modifier_damping():
     assert np.sum(traj_mod - traj_xml) == 0.0
 
     # Create another trajectory with the modifier which should be different now
-    del sim, model, traj_mod, jnt_mod
+    del sim, model, traj_mod
     model = load_model_from_path(TEST_MODEL_FURUTA_PATH)
     sim = MjSim(model)
     jnt_mod = MujocoJointModifier(sim)
@@ -156,8 +190,34 @@ def test_mujoco_joint_modifier_damping():
     assert np.sum(traj_mod - traj_xml) != 0.0
 
 
+def test_mujoco_body_modifier_position():
+    from inspect import signature
+    random_state = np.random.RandomState()
+    model = load_model_from_path(TEST_MODEL_FURUTA_PATH)
+    sim = MjSim(model)
+    body_mod = MujocoBodyModifier(sim)
+    setter_func = body_mod.set_pos
+
+    if setter_func.__defaults__ is not None:  # in case there are no kwargs
+        n_kwargs = len(setter_func.__defaults__)
+    else:
+        n_kwargs = 0
+
+    sig = signature(setter_func)
+    n_params = len(sig.parameters) - n_kwargs - 1  # Exclude name & non-positional arguments
+
+    new_values = []
+    for _ in range(n_params):
+        values = np.array([random_state.uniform(1, 1) for i in range(3)])
+        new_values.append(values)
+
+    setter_func('pole', *new_values)
+
+
 if __name__ == "__main__":
     test_mujoco_body_modifier_friction()
     test_mujoco_joint_modifier_damping()
     test_mujoco_body_modifier_mass()
+    test_mujoco_body_modifier_position()
+    test_mujoco_body_modifier_inertia()
     print('Congratulations! No errors!')
