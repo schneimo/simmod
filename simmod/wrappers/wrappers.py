@@ -54,17 +54,26 @@ class _WelfordsAlgorithm:
 
 class _Range:
 
-    def __init__(self, init_high=0.0, fixed_high=False, init_low=0.0, fixed_low=False):
+    def __init__(self, init_high: float = 0.0, bounded_high: bool = False, init_low: float = 0.0,
+                 bounded_low: bool = False, reset_after: Optional[int] = None):
         self.low, self.high = init_low, init_high
-        self.fixed_low, self.fixed_high = fixed_low, fixed_high
+        self.bounded_low, self.bounded_high = bounded_low, bounded_high
+        self.unbounded = (not bounded_low) and (not bounded_high)
+        self.reset_after = reset_after if reset_after is not None else np.inf
+        self.count = 0
 
     def update(self, new_value):
-        if not self.fixed_low and not self.fixed_high:
-            self.high = new_value if self.high < new_value else self.high
+        self.count += 1
+        if self.count >= self.reset_after:
+            self.count = 0
+            self.high
+
+        if self.unbounded:
+            self.high = abs(new_value) if self.high < abs(new_value) else self.high
             self.low = -self.high
-        elif self.fixed_high:
+        elif self.bounded_high:
             self.low = new_value if self.low > new_value else self.low
-        elif self.fixed_low:
+        elif self.bounded_low:
             self.high = new_value if self.high < new_value else self.high
 
     def get_stats(self):
@@ -77,14 +86,14 @@ class _NoiseWrapper(gym.Wrapper):
                  env,
                  space,
                  noise_process: Optional[Callable] = None,
-                 noise_scale: Union[List, float] = 1.,
-                 noise_baseline: Optional[str] = 'range',
+                 noise_scale: Union[List[float], float] = 1.,
+                 noise_baseline: Union[str, List[float]] = 'range',
                  dtype=np.float32,
                  *args, **kwargs):
         super().__init__(env)
         self.dtype = np.dtype(dtype)
         self.shape = space.shape
-        self._noise_process = np.random.normal if noise_process is None else noise_process
+        self._noise_process = np.random.uniform if noise_process is None else noise_process
 
         if np.isscalar(noise_scale):
             self.noise_scale = np.full(self.shape, noise_scale, dtype=dtype)
@@ -93,21 +102,29 @@ class _NoiseWrapper(gym.Wrapper):
             self.noise_scale = np.array(noise_scale)
 
         self._noise_range = []
-        for low, high in zip(space.low, space.high):
-            fixed_high = high != np.inf
-            fixed_low = low != -np.inf
-            low = 0.0 if not fixed_low else low
-            high = 0.0 if not fixed_high else high
-            self._noise_range.append(_Range(high, fixed_high, low, fixed_low))
+        if isinstance(noise_baseline, str):
+            for low, high in zip(space.low, space.high):
+                bounded_high = high < np.inf
+                bounded_low = low > -np.inf
+                low = low if bounded_low else 0.0
+                high = high if bounded_high else 0.0
+                if noise_baseline == 'range':
+                    self._noise_range.append(_Range(high, bounded_high, low, bounded_low))
+        elif isinstance(noise_baseline, list):
+            assert len(noise_baseline) == len(space.low)
+            for val in noise_baseline:
+                self._noise_range.append(_Range(val, True, -val, True))
+
 
     def _update(self, values):
         values = [values] if np.isscalar(values) else values
-        for idx, range in enumerate(self._noise_range):
-            range.update(values[idx])
+        #for idx, range in enumerate(self._noise_range):
+        #    range.update(values[idx])
 
     def _get_noise(self):
-        half_range = [r.get_stats()/2 for r in self._noise_range]
-        noise = np.array([self._noise_process(scale=s) for s in half_range], dtype=self.dtype)
+        values = [r.get_stats() for r in self._noise_range]
+        #noise = np.array([self._noise_process(loc=0.0, scale=s) for s in values], dtype=self.dtype)
+        noise = np.array([self._noise_process(low=-s, high=s) for s in values], dtype=self.dtype)
         assert noise.shape == self.shape
         return self.noise_scale * noise
 
@@ -117,18 +134,16 @@ class ActionWrapper(_NoiseWrapper):
     def __init__(self,
                  env: gym.Env,
                  noise_process: Optional[Callable] = None,
-                 noise_scale: Union[List, float] = 1.,
-                 noise_baseline: Optional[str] = 'range',
+                 noise_scale: Union[List[float], float] = 1.,
+                 noise_baseline: Union[str, List[float]] = 'range',
                  min_action_latency: int = 1,
-                 max_action_latency: int = 3,
+                 max_action_latency: int = 5,
                  dtype=np.float32,
                  *args, **kwargs):
-        super().__init__(env, env.action_space, noise_process, noise_scale, noise_baseline, dtype, *args,
-                               **kwargs)
+        super().__init__(env, env.action_space, noise_process, noise_scale, noise_baseline, dtype, *args, **kwargs)
         self.dtype = np.dtype(dtype)
 
         self.min_action_latency, self.max_action_latency = min_action_latency, max_action_latency
-        self._noise_process = np.random.normal if noise_process is None else noise_process
         self._buffer_actions = None
         self._buffer_actions_len = np.random.randint(min_action_latency, max_action_latency+1)  # in timesteps
 
@@ -186,8 +201,8 @@ class ObservationWrapper(_NoiseWrapper):
     def __init__(self,
                  env: gym.Env,
                  noise_process: Optional[Callable] = None,
-                 noise_scale: Union[List, float] = 1.,
-                 noise_baseline: Optional[str] = 'range',
+                 noise_scale: Union[List[float], float] = 1.,
+                 noise_baseline: Union[str, List[float]] = 'range',
                  dtype=np.float32,
                  *args, **kwargs):
         super().__init__(env, env.observation_space, noise_process, noise_scale, noise_baseline, dtype, *args, **kwargs)

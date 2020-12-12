@@ -57,14 +57,20 @@ class ExperimentScheduler:
     def create_wrapper(self, config):
         pass
 
-    def load_experiments(self, config_path: tp.AnyStr) -> None:
+    def load_experiments(self, config_path: tp.AnyStr = None, config: tp.AnyStr = None) -> None:
         """
         Loads many experiments from a given file.
 
         Args:
+            config: Configuration
             config_path: File path of the experiment configurations
         """
-        experiments_config = load_yaml(config_path)
+        if config_path is not None:
+            experiments_config = load_yaml(config_path)
+        elif config is not None:
+            experiments_config = config
+        else:
+            raise ValueError('Parameters config and config_path are None. One must be not None.')
         for exp_name, value in experiments_config.items():
             new_exp = ExperimentConfiguration(exp_name)
             for modifier_name, config in value.items():
