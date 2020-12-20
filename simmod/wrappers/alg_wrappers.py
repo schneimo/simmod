@@ -24,18 +24,23 @@ class UDRMujocoWrapper(gym.Wrapper):
         self._setup_env_metadata()
 
     def _setup_env_metadata(self):
+        if 'randomization.parameter_range' not in self.metadata.keys():
+            self.metadata['randomization.parameter_range'] = dict()
+        if 'randomization.parameter_value' not in self.metadata.keys():
+            self.metadata['randomization.parameter_value'] = dict()
+
         range_values = dict()
         for mod in self.alg.modifiers:
             for param in mod.instrumentation:
                 range_values[f'{param.setter}:{param.object_name}'] = param.parameter_range
-        self.metadata['randomization.parameter_range'] = range_values
+        self.metadata['randomization.parameter_range'].update(range_values)
 
     def _update_env_metadata(self):
         param_values = dict()
         for mod in self.alg.modifiers:
             for param in mod.instrumentation:
                 param_values[f'{param.setter}:{param.object_name}'] = self.alg.get_current_val(mod, param)
-        self.metadata['randomization.parameter_value'] = param_values
+        self.metadata['randomization.parameter_value'].update(param_values)
 
     def step(self, action):
         #action = self.alg.step(Execution.BEFORE_STEP, action=action)

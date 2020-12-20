@@ -113,19 +113,26 @@ class _NoiseWrapper(gym.Wrapper):
             assert len(noise_baseline) == len(space.low)
             for val in noise_baseline:
                 self._noise_range.append(_Range(val, True, -val, True))
+        self.key_name = f'wrapper:{type(self).__name__}'
         self._setup_env_metadata()
 
+
     def reset(self, **kwargs):
-        self.metadata['randomization.parameter_value'] = {f'wrapper:{type(self).__name__}': []}
+        self.metadata['randomization.parameter_value'].update({self.key_name: []})
         return super().reset(**kwargs)
 
     def _setup_env_metadata(self):
-        range_values = {f'wrapper:{type(self).__name__}:noise_scale': self.noise_scale}
-        self.metadata['randomization.parameter_range'] = range_values
-        self.metadata['randomization.parameter_value'] = {f'wrapper:{type(self).__name__}': []}
+        if 'randomization.parameter_range' not in self.metadata.keys():
+            self.metadata['randomization.parameter_range'] = dict()
+        if 'randomization.parameter_value' not in self.metadata.keys():
+            self.metadata['randomization.parameter_value'] = dict()
+
+        range_values = {f'{self.key_name}:noise_scale': self.noise_scale}
+        self.metadata['randomization.parameter_range'].update(range_values)
+        self.metadata['randomization.parameter_value'].update({self.key_name: []})
 
     def _update_env_metadata(self, noise):
-        self.metadata['randomization.parameter_value'][f'wrapper:{type(self).__name__}'].append(noise)
+        self.metadata['randomization.parameter_value'][self.key_name].append(noise)
 
     def _update(self, values):
         values = [values] if np.isscalar(values) else values
