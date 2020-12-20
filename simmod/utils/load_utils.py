@@ -2,13 +2,11 @@
 Copyright (c) 2020, Moritz Schneider
 @Author: Moritz Schneider
 """
-from typing import Dict
-import yaml, os
+from typing import Dict, AnyStr
+import yaml
 
 
-def load_yaml(path) -> Dict:
-    #path = os.path.dirname(__file__)
-    #path = os.path.join(path, file_path)
+def load_yaml(path: AnyStr) -> Dict:
     with open(path) as json_file:
         data = yaml.load(json_file, Loader=yaml.FullLoader)
     return data

@@ -66,7 +66,6 @@ class _Range:
         self.count += 1
         if self.count >= self.reset_after:
             self.count = 0
-            self.high
 
         if self.unbounded:
             self.high = abs(new_value) if self.high < abs(new_value) else self.high
@@ -86,7 +85,7 @@ class _NoiseWrapper(gym.Wrapper):
                  env,
                  space,
                  noise_process: Optional[Callable] = None,
-                 noise_scale: Union[List[float], float] = 1.,
+                 noise_scale: Union[List[float], float] = 1.0,
                  noise_baseline: Union[str, List[float]] = 'range',
                  dtype=np.float32,
                  *args, **kwargs):
@@ -114,7 +113,18 @@ class _NoiseWrapper(gym.Wrapper):
             assert len(noise_baseline) == len(space.low)
             for val in noise_baseline:
                 self._noise_range.append(_Range(val, True, -val, True))
+        self._setup_env_metadata()
 
+    def reset(self, **kwargs):
+        self.metadata['randomization.parameter_value'] = {f'wrapper:{type(self).__name__}': []}
+        return super().reset(**kwargs)
+
+    def _setup_env_metadata(self):
+        range_values = {f'wrapper:{type(self).__name__}:noise_scale': self.noise_scale}
+        self.metadata['randomization.parameter_range'] = range_values
+
+    def _update_env_metadata(self, noise):
+        self.metadata['randomization.parameter_value'][f'wrapper:{type(self).__name__}'].append(noise)
 
     def _update(self, values):
         values = [values] if np.isscalar(values) else values
@@ -126,6 +136,7 @@ class _NoiseWrapper(gym.Wrapper):
         #noise = np.array([self._noise_process(loc=0.0, scale=s) for s in values], dtype=self.dtype)
         noise = np.array([self._noise_process(low=-s, high=s) for s in values], dtype=self.dtype)
         assert noise.shape == self.shape
+        self._update_env_metadata(noise)
         return self.noise_scale * noise
 
 
@@ -184,7 +195,7 @@ class ActionWrapper(_NoiseWrapper):
     def reset(self, **kwargs):
         self._buffer_actions = None
         self._buffer_actions_len = np.random.randint(self.min_action_latency, self.max_action_latency + 1)
-        return self.env.reset(**kwargs)
+        return super().reset(**kwargs)
 
     def step(self, action):
         return self.env.step(self.action(action))

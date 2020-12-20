@@ -12,10 +12,6 @@ Num = Union[int, float]
 Array = Union[np.ndarray, List]
 ArrayOrNum = Union[Array, Num]
 
-
-# TODO: How can we get this into JSON?
-# TODO: Algorithms as Wrappers?
-
 class Execution(Enum):
     BEFORE_STEP = auto()
     AFTER_STEP = auto()
