@@ -122,6 +122,7 @@ class _NoiseWrapper(gym.Wrapper):
     def _setup_env_metadata(self):
         range_values = {f'wrapper:{type(self).__name__}:noise_scale': self.noise_scale}
         self.metadata['randomization.parameter_range'] = range_values
+        self.metadata['randomization.parameter_value'] = {f'wrapper:{type(self).__name__}': []}
 
     def _update_env_metadata(self, noise):
         self.metadata['randomization.parameter_value'][f'wrapper:{type(self).__name__}'].append(noise)
