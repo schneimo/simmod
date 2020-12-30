@@ -34,10 +34,10 @@ class BaseAlgorithm(ABC):
         pass
 
     def _record_new_val(self, modifier, instrumentation, values):
-        self._current_values[modifier].update({instrumentation.object_name: values})
+        self._current_values[modifier].update({instrumentation.object_name: values})  #FIXME: Other values of the same object for this modifiers will be overwritten here
 
     def get_current_val(self, modifier, instrumentation):
-        return self._current_values[modifier][instrumentation.object_name]
+        return self._current_values[modifier][instrumentation.object_name]  #FIXME: Gives the same value for inertia and mass of the same object i.e. pole
 
     def step(self, **kwargs) -> None:
         """ Modify the pre-defined parameters of the simulation with each modifiers.
