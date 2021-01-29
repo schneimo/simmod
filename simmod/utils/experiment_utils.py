@@ -1,4 +1,7 @@
-"""
+"""Experiment loader to execute many experiments one after another.
+
+Usage:
+
 Copyright (c) 2020, Moritz Schneider
 @Author: Moritz Schneider
 """
@@ -19,7 +22,8 @@ class ExperimentConfiguration:
         self.name = name
         self.configurations = list()
 
-    def add(self, config: tp.Dict, modifier_cls: tp.Optional[tp.Callable] = None, wrapper_cls: tp.Optional[tp.Callable] = None):
+    def add(self, config: tp.Dict, modifier_cls: tp.Optional[tp.Callable] = None,
+            wrapper_cls: tp.Optional[tp.Callable] = None):
         self.configurations.append((modifier_cls, config, wrapper_cls))
 
 
@@ -42,10 +46,10 @@ class GymExperimentScheduler:
 
         Args:
             config: Configuration dictionary including the callable class and the configuration dict of the modifier
-            env:    OpenAI gym environment for the modifier
+            env: OpenAI gym environment for the modifier
 
-        Returns:    List of created modifiers or None if no modifier was created.
-
+        Returns:
+            List of created modifiers or `None` if no modifier was created.
         """
         modifiers = list()
         for modifier_cls, modifier_config, _ in config:
@@ -67,15 +71,15 @@ class GymExperimentScheduler:
             return modifier_cls(sim=mujoco_sim, config=modifier_config)
 
     def create_wrapped_env(self, config: tp.Dict, env: Env):
-        """ Creates the necessary wrappers specified via the configuration file and wraps the given environment
+        """Creates the necessary wrappers specified via the configuration file and wraps the given environment
         with them.
 
         Args:
             config:  Configuration for the wrapper which specifies
             env:    OpenAI gym environment which should be wrapped around.
 
-        Returns:    Wrapped OpenAI gym environment
-
+        Returns:
+            Wrapped OpenAI gym environment
         """
         for _, wrapper_config, wrapper_cls in config:
             if wrapper_cls is None:
@@ -84,8 +88,10 @@ class GymExperimentScheduler:
         return env
 
     def load_experiments(self, config_path: tp.AnyStr = None, config: tp.Dict = None) -> None:
-        """
-        Loads many experiments from a given file.
+        """Loads many experiments from a given configuration file.
+
+        Either the argument `config_path` or `config` is needed. If both are given (== not `None`), the configuration
+        loaded with `config_path` is used.
 
         Args:
             config_path:    File path of the experiment configurations

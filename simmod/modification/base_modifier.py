@@ -1,4 +1,12 @@
-"""
+"""Base class for the modifiers which defines how an modifier should be structured.
+
+Each modifier is built on a configuration. Each entry in this configuration is stored as a parameterization object and
+stored for later use.
+If no configuration is given it is taken from a standard configuration file which
+usually defines the object parameter bounds at infinity. This might make the simulation unstable. Therefore, it is
+recommended to define a configuration for each modifier. If a configuration is given only the objects which are defined in
+this configuration are used by the domain randomization algorithms.
+
 Copyright (c) 2020, Moritz Schneider
 @Author: Moritz Schneider
 """
@@ -11,17 +19,11 @@ from simmod.common.parametrization import Parametrization
 from simmod.utils.load_utils import load_yaml
 
 
-# TODO: Create default config files
-
-
 class BaseModifier(ABC):
 
     def __init__(
             self,
             config: Dict = None,
-            # objects: Optional[List] = None,
-            # ranges: Union[np.ndarray, List[np.ndarray]] = None,
-            # setters: Optional[List] = None,
             random_state=None,
             *args,
             **kwargs
@@ -44,9 +46,11 @@ class BaseModifier(ABC):
         self.execution_point = execution_point = config['options']['execution']
         for setter in config:
 
+            # 'options' not for configuration of properties
             if setter == 'options':
                 continue
 
+            # Get the parameter ranges for every object specified and store this parameterization
             assert setter in self.standard_setters.keys(), "Unknown setter function %s" % setter
             object_names = config[setter].keys()
             use_default = False
@@ -58,6 +62,8 @@ class BaseModifier(ABC):
                 mod_inst = Parametrization(setter, object_name, range_val, execution_point)
                 self.instrumentation.append(mod_inst)
 
+            # If 'default' was specified for this setter, then we have to get the default configuration for all
+            # unspecified objects
             if use_default:
                 diff = list(set(self.names) - set(object_names))
                 for object_name in diff:

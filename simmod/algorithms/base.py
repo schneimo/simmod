@@ -1,4 +1,14 @@
-"""
+"""Defines how an algorithm for domain randomization should be structured.
+
+Each algorithm can be used in the following way:
+```python
+config = load_yaml(json_file)  # Load the configuration
+sim = Simulation(...)  # Create or get the simulation
+mod = Modifier(sim=sim, config=config)  # Create the modifier with the configuration and the simulation
+alg = UniformDomainRandomization(mod)  #
+alg.step()  # Change the parameters of the simulation
+``
+
 Copyright (c) 2020, Moritz Schneider
 @Author: Moritz Schneider
 """
@@ -25,11 +35,12 @@ class BaseAlgorithm(ABC):
         the given modifier.
 
         Args:
-            modifier:           Modifier to change the parameter defined in the instrumentation
+            modifier:            Modifier to change the parameter defined in the instrumentation
             instrumentation:    Configuration of the parameter we want  change
             **kwargs:           Additional arguments for the setter function of the modifier
 
-        Returns:                Return of the setter function
+        Returns:
+            Return of the setter function
         """
         pass
 
@@ -40,12 +51,13 @@ class BaseAlgorithm(ABC):
         return self._current_values[modifier][instrumentation.object_name]  #FIXME: Gives the same value for inertia and mass of the same object i.e. pole
 
     def step(self, **kwargs) -> None:
-        """ Modify the pre-defined parameters of the simulation with each modifiers.
+        """Modify the pre-defined parameters of the simulation with each modifiers.
 
         Args:
             **kwargs:   Additional arguments for the parameter setter functions of the
 
-        Returns:        Return of the setter functions
+        Returns:
+            Return of the setter functions
         """
         input = kwargs
         for modifier in self.modifiers:

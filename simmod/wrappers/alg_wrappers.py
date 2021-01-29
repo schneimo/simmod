@@ -1,4 +1,8 @@
-"""
+"""Uniform Domain Randomization (UDR) wrapper for Mujoco simulations given the Mujoco-based environment and the needed
+modifiers.
+
+Before the wrapper can be initialized, the needed modifiers must be created.
+
 Copyright (c) 2020, Moritz Schneider
 @Author: Moritz Schneider
 """
@@ -11,11 +15,15 @@ from simmod.common.parametrization import Execution
 
 
 class UDRMujocoWrapper(gym.Wrapper):
-    """
-    Implements the Uniform Domain Randomization algorithm for Mujoco simulations in an OpenAI Gym wrapper.
-    """
+    """Implements the Uniform Domain Randomization algorithm for Mujoco simulations in an OpenAI Gym wrapper."""
 
     def __init__(self, env: Env, *modifiers: MujocoBaseModifier):
+        """Creates the wrapper and wraps it around the given environment.
+
+        Args:
+            env: OpenAI Gym environment to wrap
+            *modifiers: Mujoco modifiers for the domain randomizer
+        """
         super(UDRMujocoWrapper, self).__init__(env)
         assert env.unwrapped.sim is not None, "Assuming a Gym environment with a Mujoco simulation at variable 'sim'"
         self.sim = env.unwrapped.sim
@@ -24,6 +32,7 @@ class UDRMujocoWrapper(gym.Wrapper):
         self._setup_env_metadata()
 
     def _setup_env_metadata(self):
+        """Allows to write the individual parameters in each timestep to be written into the environment metadata."""
         if 'randomization.parameter_range' not in self.metadata.keys():
             self.metadata['randomization.parameter_range'] = dict()
         if 'randomization.parameter_value' not in self.metadata.keys():

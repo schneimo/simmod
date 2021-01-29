@@ -1,4 +1,6 @@
-"""
+"""The parameterization is the connection between the setter functions, the simulation objects and their respective
+value ranges. All those variables are stored in an individual parameterization instance.
+
 Copyright (c) 2020, Moritz Schneider
 @Author: Moritz Schneider
 """
@@ -11,6 +13,7 @@ import numpy as np
 Num = Union[int, float]
 Array = Union[np.ndarray, List]
 ArrayOrNum = Union[Array, Num]
+
 
 class Execution(Enum):
     BEFORE_STEP = auto()
@@ -26,7 +29,7 @@ class Parametrization:
             object_name: AnyStr,
             parameter_range: Array,
             execution: AnyStr,
-            parameter_type: Optional[object] = None,
+            parameter_type: Optional[object] = None,  # TODO: Not used at the moment
             shape: Optional[Tuple] = None,
             name: Optional[AnyStr] = None
     ) -> None:

@@ -1,18 +1,25 @@
+"""Defines noise distributions in a standardized way so that they can be replaced by each other in different methods
+without changing other arguments to much.
+
+TODO: Currently under construction
+"""
+
 from abc import ABC, abstractmethod
 
 import numpy as np
 
 
 class AdaptiveParamNoiseSpec(object):
-    """
-    Implements adaptive parameter noise
-
-    :param initial_stddev: (float) the initial value for the standard deviation of the noise
-    :param desired_action_stddev: (float) the desired value for the standard deviation of the noise
-    :param adoption_coefficient: (float) the update coefficient for the standard deviation of the noise
-    """
+    """Adaptive parameter noise"""
 
     def __init__(self, initial_stddev=0.1, desired_action_stddev=0.1, adoption_coefficient=1.01):
+        """
+
+        Args:
+            initial_stddev: (float) the initial value for the standard deviation of the noise
+            desired_action_stddev: (float) the desired value for the standard deviation of the noise
+            adoption_coefficient: (float) the update coefficient for the standard deviation of the noise
+        """
         self.initial_stddev = initial_stddev
         self.desired_action_stddev = desired_action_stddev
         self.adoption_coefficient = adoption_coefficient
@@ -20,10 +27,10 @@ class AdaptiveParamNoiseSpec(object):
         self.current_stddev = initial_stddev
 
     def adapt(self, distance):
-        """
-        update the standard deviation for the parameter noise
+        """Update the standard deviation for the parameter noise
 
-        :param distance: (float) the noise distance applied to the parameters
+        Args:
+            distance: (float) the noise distance applied to the parameters
         """
         if distance > self.desired_action_stddev:
             # Decrease stddev.
@@ -33,10 +40,10 @@ class AdaptiveParamNoiseSpec(object):
             self.current_stddev *= self.adoption_coefficient
 
     def get_stats(self):
-        """
-        return the standard deviation for the parameter noise
+        """Return the standard deviation for the parameter noise
 
-        :return: (dict) the stats of the noise
+        Returns:
+            (dict) the stats of the noise
         """
         return {'param_noise_stddev': self.current_stddev}
 
@@ -46,17 +53,13 @@ class AdaptiveParamNoiseSpec(object):
 
 
 class Noise(ABC):
-    """
-    The action noise base class
-    """
+    """The action noise base class"""
 
     def __init__(self):
         super(Noise, self).__init__()
 
     def reset(self) -> None:
-        """
-        call end of episode reset for the noise
-        """
+        """Call end of episode reset for the noise"""
         pass
 
     @abstractmethod
@@ -65,14 +68,16 @@ class Noise(ABC):
 
 
 class NormalNoise(Noise):
-    """
-    A Gaussian action noise
-
-    :param mean: (float) the mean value of the noise
-    :param sigma: (float) the scale of the noise (std here)
-    """
+    """Gaussian action noise"""
 
     def __init__(self, mean, sigma, shape):
+        """A Gaussian action noise
+
+        Args:
+            mean: (float) the mean value of the noise
+            sigma: (float) the scale of the noise (std here)
+            shape:
+        """
         super().__init__()
         self._mu = mean
         self._sigma = sigma
@@ -86,19 +91,21 @@ class NormalNoise(Noise):
 
 
 class OrnsteinUhlenbeckNoise(Noise):
-    """
-    A Ornstein Uhlenbeck action noise, this is designed to approximate brownian motion with friction.
+    """A Ornstein Uhlenbeck action noise, this is designed to approximate brownian motion with friction.
 
     Based on http://math.stackexchange.com/questions/1287634/implementing-ornstein-uhlenbeck-in-matlab
-
-    :param mean: (float) the mean of the noise
-    :param sigma: (float) the scale of the noise
-    :param theta: (float) the rate of mean reversion
-    :param dt: (float) the timestep for the noise
-    :param initial_noise: ([float]) the initial value for the noise output, (if None: 0)
     """
 
     def __init__(self, mean, sigma, theta=.15, dt=1e-2, initial_noise=None):
+        """
+
+        Args:
+            mean: (float) the mean of the noise
+            sigma: (float) the scale of the noise
+            theta: (float) the rate of mean reversion
+            dt: (float) the timestep for the noise
+            initial_noise: ([float]) the initial value for the noise output, (if None: 0)
+        """
         super().__init__()
         self._theta = theta
         self._mu = mean
@@ -115,9 +122,7 @@ class OrnsteinUhlenbeckNoise(Noise):
         return noise
 
     def reset(self) -> None:
-        """
-        reset the Ornstein Uhlenbeck noise, to the initial position
-        """
+        """Reset the Ornstein Uhlenbeck noise, to the initial position"""
         self.noise_prev = self.initial_noise if self.initial_noise is not None else np.zeros_like(self._mu)
 
     def __repr__(self) -> str:

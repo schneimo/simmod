@@ -24,7 +24,7 @@ setup(
         'gym>=0.17.1',
     ],
     extras_require=extras,
-    url="https://gitlab.is.tue.mpg.de/mschneider/simulation-modification-framework",
+    url="https://github.com/MoritzTaylor/simmod",
     packages=[package for package in find_packages() if package.startswith('simmod')],
     python_requires='>=3.7',
     classifiers=[

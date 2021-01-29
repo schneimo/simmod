@@ -1,22 +1,18 @@
 #!/usr/bin/env python
-# demonstration of markers (visual-only geoms)
+# demonstration of domain randomization algorithms with Mujoco
 
 import numpy as np
 from mujoco_py import load_model_from_xml, MjSim, MjViewer
 
+from simmod import load_yaml
 from simmod.algorithms import UniformDomainRandomization
-from simmod.modification.mujoco import MujocoMaterialModifier
-from simmod.modification.mujoco import MujocoTextureModifier, MujocoBodyModifier
-import xml.etree.ElementTree as ET
-import yaml
+from simmod.modification.mujoco import MujocoMaterialModifier, MujocoTextureModifier, MujocoBodyModifier
 
 MODEL_STRING = """
 <?xml version="1.0" encoding="utf-8"?>
-<?xml version="1.0" encoding="utf-8"?>
-<mujoco model="qube">
-    <compiler angle="radian" meshdir="../meshes/" />
+<mujoco model="cube">
+    <compiler angle="radian"/>
     <option timestep="0.01" integrator="RK4" />
-    <size njmax="500" nconmax="100" />
 
     <asset>
         <texture builtin="flat" name="texred" height="1024" width="1024" rgb1="0.698 0.1333 0.1333" type="2d"/>
@@ -49,36 +45,32 @@ MODEL_STRING = """
 </mujoco>
 """
 
-def angle_normalize(x: float) -> float:
-    return (x % (2 * np.pi)) - np.pi
-
 
 def reset_pole(simulation):
     simulation.data.qpos[-1] = np.pi + np.random.uniform(-0.25, 0.25)
 
 
-model = load_model_from_xml(MODEL_STRING)
-sim = MjSim(model)
-viewer = MjViewer(sim)
+if __name__ == "__main__":
+    model = load_model_from_xml(MODEL_STRING)
+    sim = MjSim(model)
+    viewer = MjViewer(sim)
 
-#mod_tex = MujocoTextureModifier(sim=sim)
-#mod_mat = MujocoMaterialModifier(sim=sim)
+    mod_tex = MujocoTextureModifier(sim=sim)
+    mod_mat = MujocoMaterialModifier(sim=sim)
 
-with open('./assets/body_text.yaml') as json_file:
-    config = yaml.load(json_file, Loader=yaml.FullLoader)
+    config = load_yaml('./assets/algorithm_example.yaml')
+    mod_body = MujocoBodyModifier(sim=sim, config=config)
+    pole_id = mod_body.model.body_name2id('pole')
+    arm_id = mod_body.model.body_name2id('arm')
+    alg = UniformDomainRandomization(mod_body)
 
-mod_body = MujocoBodyModifier(sim=sim, config=config)
-pole_id = mod_body.model.body_name2id('pole')
-arm_id = mod_body.model.body_name2id('arm')
-alg = UniformDomainRandomization(mod_body)
-
-while True:
-    "---------------------------------------"
-    print(mod_body.model.body_mass[pole_id])
-    print(mod_body.model.body_mass[arm_id])
-    for _ in range(300):
-        sim.data.ctrl[:] = 0
-        sim.step()
-        viewer.render()
-    reset_pole(sim)
-    alg.step()
+    while True:
+        "---------------------------------------"
+        print(f"'pole' mass changed to: ", mod_body.model.body_mass[pole_id])
+        print(f"'arm' mass changed to: ", mod_body.model.body_mass[arm_id])
+        for _ in range(100):
+            sim.data.ctrl[:] = 0
+            sim.step()
+            viewer.render()
+        reset_pole(sim)
+        alg.step()
