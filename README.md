@@ -8,6 +8,8 @@ Parameters can be changed directly with the simulation attributes or if applicab
 Currently supported simulations:
 - Mujoco
 
+Furthermore, online modification of built-in variables is also supported.
+
 ## Installation
 Clone the repo and cd into it:
 ```bash
@@ -20,9 +22,11 @@ Install simmod package:
 pip install -e .
 ```
 
-## Usage
+## Structure
+Each simulation can be changed through a handful of modifiers. Every modifier changes a specific category of parameters of the simulation (i.e. material of the object, body properties, etc.). Modifiers can be configured with configurations which specify the parameters/objects to change. The elements of the configurations are stored in `parameterization` objects.
 
-Usage is simple and can be performed in 3 steps which is generally structured as followed:
+## Usage
+Usage is simple and can be performed in 3 steps which is generally structured as follows:
 ```python
 sim = Simulation(...)  # Initialize the simulation
 mod = ModifierClass(sim)  # Initialize the modifier
@@ -64,14 +68,13 @@ sim.step()
 More examples can be found in the _examples_ directory.
 
 ## Configuration
-As you can see in the example above, all modifiers can be configured with configurations so that specific objects with individual upper and lower value bounds can be defined.
+As you can see in the example above, all modifiers can be configured with configurations so that specific objects with individual upper and lower value bounds can be defined. That is especially useful when using domain randomization algorithms to define their sampling range.
 
 Configurations are stored as dictionaries and can be externally loaded from yaml files.
 
 ### Modifiers
 Each modifier is built on a configuration. If no configuration is given it is taken from a standard configuration file in [simmod/modification/data/](./simmod/modification/data/) which
-usually defines the object parameter bounds at infinity or zero. This might make the simulation unstable. Therefore, it is
-recommended to define a configuration for each modifier. 
+usually defines the object parameter bounds at infinity or zero. This might make the simulation unstable. Therefore, it is recommended to define a configuration for each modifier individual to your specific application. 
 Each property of the modifier (i.e. `mass`) holds the objects that should be changed. For each of these objects an upper or lower bound must be given in a tuple (one tuple for each dimension).
 
 Example:
@@ -81,7 +84,7 @@ options:
   execution: 'RESET'
 mass:
   pole:
-    - [0.018, 0.03]
+    - [0.018, 0.03]  # [lower bound, upper bound]
   arm:
     - [0.05175, 0.08625]
 ```
@@ -94,8 +97,11 @@ If all other objects should be changed in a specific range this can be specified
 options:
   execution: 'RESET'
 mass:
+  arm:
+    - [0.05175, 0.08625]
   default:
-    - [0, .inf]
+    - [0, .inf] 
+    # lower and upper bound of each object except for object with name 'arm'
 ```
 Therefore, it is important that no object in the simulation is named `default` to avoid unexpected behavior.
 
