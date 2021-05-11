@@ -2,9 +2,6 @@
 modifiers.
 
 Before the wrapper can be initialized, the needed modifiers must be created.
-
-Copyright (c) 2020, Moritz Schneider
-@Author: Moritz Schneider
 """
 import gym
 from gym import Env
@@ -29,27 +26,30 @@ class UDRMujocoWrapper(gym.Wrapper):
         self.sim = env.unwrapped.sim
 
         self.alg = UniformDomainRandomization(*modifiers)
-        self._setup_env_metadata()
+        self._setup()
 
-    def _setup_env_metadata(self):
+    def _setup(self):
         """Allows to write the individual parameters in each timestep to be written into the environment metadata."""
-        if 'randomization.parameter_range' not in self.metadata.keys():
-            self.metadata['randomization.parameter_range'] = dict()
-        if 'randomization.parameter_value' not in self.metadata.keys():
-            self.metadata['randomization.parameter_value'] = dict()
+        #if 'randomization.parameter_range' not in self.metadata.keys():
+        #    self.metadata['randomization.parameter_range'] = dict()
+        #if 'randomization.parameter_value' not in self.metadata.keys():
+        #    self.metadata['randomization.parameter_value'] = dict()
 
-        range_values = dict()
+        #range_values = dict()
         for mod in self.alg.modifiers:
             for param in mod.instrumentation:
-                range_values[f'{param.setter}:{param.object_name}'] = param.parameter_range
-        self.metadata['randomization.parameter_range'].update(range_values)
+                #range_values[f'{param.setter}:{param.object_name}'] = param.parameter_range
+                #current_values = self.alg.get_current_val(mod, param)
+                #param.update(current_values)
+                pass
+        #self.metadata['randomization.parameter_range'].update(range_values)
 
-    def _update_env_metadata(self):
-        param_values = dict()
-        for mod in self.alg.modifiers:
-            for param in mod.instrumentation:
-                param_values[f'{param.setter}:{param.object_name}'] = self.alg.get_current_val(mod, param)
-        self.metadata['randomization.parameter_value'].update(param_values)
+    #def _update_env_metadata(self):
+        #param_values = dict()
+        #for mod in self.alg.modifiers:
+        #    for param in mod.instrumentation:
+        #        param_values[f'{param.setter}:{param.object_name}'] = self.alg.get_current_val(mod, param)
+        #self.metadata['randomization.parameter_value'].update(param_values)
 
     def step(self, action):
         #action = self.alg.step(Execution.BEFORE_STEP, action=action)
@@ -60,8 +60,6 @@ class UDRMujocoWrapper(gym.Wrapper):
 
     def reset(self, **kwargs):
         self.alg.step(Execution.RESET)
-        #self.metadata['randomization.parameter_value'] = {f'{param.setter}:{param.object_name}': param.range_val for
-        #                                                  param in self.alg.modifiers}
         observation = self.env.reset(**kwargs)
-        self._update_env_metadata()
+        #self._update_env_metadata()
         return observation

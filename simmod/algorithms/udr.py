@@ -1,12 +1,11 @@
-"""
-Copyright (c) 2020, Moritz Schneider
-@Author: Moritz Schneider
-"""
+"""Uniform Domain Randomization (UDR) algorithm"""
 from inspect import signature
 from typing import Any, Union
 
 import numpy as np
+from numpy.random import default_rng, Generator
 
+from simmod.utils.typings_ import *
 from simmod.algorithms.base import BaseAlgorithm
 from simmod.common.parametrization import Parametrization
 from simmod.modification.base_modifier import BaseModifier
@@ -22,14 +21,17 @@ class UniformDomainRandomization(BaseAlgorithm):
     via the modifiers.
     """
 
-    def __init__(self, *modifiers: BaseModifier, random_state=None, **kwargs: Any) -> None:
+    def __init__(self, *modifiers: BaseModifier, random_state: Optional[Union[Generator, int]] = None,
+                 **kwargs: Any) -> None:
         if random_state is None:
-            self.random_state = np.random.RandomState()
+            self.random_state = default_rng()
         elif isinstance(random_state, int):
             # random_state assumed to be an int
-            self.random_state = np.random.RandomState(random_state)
-        else:
+            self.random_state = default_rng(random_state)
+        elif isinstance(random_state, Generator):
             self.random_state = random_state
+        else:
+            raise ValueError(f"random_state argument must be either None, int or np.random.Generator, not {random_state}")
         super().__init__(*modifiers, **kwargs)
 
     def _randomize_object(self, modifier: BaseModifier, instrumentation: Parametrization, **kwargs) -> None:
@@ -40,11 +42,12 @@ class UniformDomainRandomization(BaseAlgorithm):
         the instrumentation variable.
 
         Args:
-            modifier:           Modifier to change the parameter defined in the instrumentation
-            instrumentation:    Configuration of the parameter we want  change
-            **kwargs:           Additional arguments for the setter function of the modifier
+            modifier: Modifier to change the parameter defined in the instrumentation
+            instrumentation: Configuration of the parameter we want  change
+            **kwargs: Additional arguments for the setter function of the modifier
 
-        Returns:                Return of the setter function of the modifier
+        Returns:
+            Return of the setter function of the modifier
         """
         object_name = instrumentation.object_name
         setter_func = modifier.standard_setters[instrumentation.setter]
@@ -66,10 +69,12 @@ class UniformDomainRandomization(BaseAlgorithm):
         for _ in range(n_params):
             values = np.array([self.random_state.uniform(lower_bound[i], upper_bound[i]) for i in range(n)])
             new_values.append(values)
-        self._record_new_val(modifier, instrumentation, new_values)
+        #self._record_new_val(modifier, instrumentation, new_values)
+        instrumentation.update(new_values)
         return setter_func(object_name, *new_values, **kwargs)
 
     def step(self, execution: EXECUTION_POINTS = 'RESET', **kwargs) -> None:
         for modifier in self.modifiers:
             for instrumentation in modifier.instrumentation:
                 self._randomize_object(modifier, instrumentation)
+            modifier.update()

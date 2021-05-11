@@ -1,8 +1,5 @@
 """The parameterization is the connection between the setter functions, the simulation objects and their respective
 value ranges. All those variables are stored in an individual parameterization instance.
-
-Copyright (c) 2020, Moritz Schneider
-@Author: Moritz Schneider
 """
 from abc import ABC
 from typing import Union, List, Callable, AnyStr, Tuple, Any, Dict, Optional
@@ -48,15 +45,25 @@ class Parametrization:
         self.lower_bound = parameter_range.T[0]
         self.upper_bound = parameter_range.T[1]
         self.name = name
+        self.history = []
+        self.current_val = None
+
+    def __str__(self):
+        return f'{self.setter}:{self.object_name}={self.current_val}'
 
     @property
     def parameter_range(self):
         return (self.lower_bound, self.upper_bound)
 
+    def update(self, new_values, **kwargs):
+        if self.current_val is not None:
+            self.history.append(self.current_val)
+        self.current_val = new_values
+
     def get_json(self) -> Dict:
         result = {
             self.setter: {
-                self.object_name: 0
+                self.object_name: self.current_val
             }
         }
         return result
@@ -78,9 +85,9 @@ class Array(Parameter):
     def __init__(
             self,
             mod_func: Callable,
-            init: ArrayOrNum = None,
-            lower: ArrayOrNum = None,
-            upper: ArrayOrNum = None
+            init: Optional[ArrayOrNum] = None,
+            lower: Optional[ArrayOrNum] = None,
+            upper: Optional[ArrayOrNum] = None
     ) -> None:
         self.lower = lower
         self.upper = upper
@@ -92,7 +99,7 @@ class Scalar(Array):
     def __init__(
             self,
             mod_func: Callable,
-            init: Num = None,
+            init: Optional[Num] = None,
             lower: Num = 0,
             upper: Num = 1
     ) -> None:

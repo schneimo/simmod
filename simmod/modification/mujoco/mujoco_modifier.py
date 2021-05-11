@@ -4,7 +4,10 @@ Modification Framework for the Mujoco simulator based on mujoco-py library.
 Unadapted version from:
 https://github.com/openai/mujoco-py/blob/master/mujoco_py/modder.py
 
-Copyright (c) 2020, Moritz Schneider
+Additional resource:
+https://github.com/ARISE-Initiative/robosuite/blob/65d3b9ad28d6e7a006e9eef7c5a0330816483be4/robosuite/utils/mjmod.py
+
+Copyright (c) 2021, Moritz Schneider
 @Author: Moritz Schneider
 """
 
@@ -15,11 +18,11 @@ from typing import AnyStr, List, Union, Dict, Tuple
 import numpy as np
 from mujoco_py import cymj
 
+import warnings
+
 from simmod.modification.base_modifier import BaseModifier, LightModifier, MaterialModifier, TextureModifier, \
     CameraModifier, JointModifier, InertialModifier
-
-Array = Union[List, np.ndarray]
-RGB = Union[np.ndarray, Tuple[np.ndarray]]
+from simmod.utils.typings_ import *
 
 
 class MujocoBaseModifier(BaseModifier):
@@ -37,10 +40,12 @@ class MujocoBaseModifier(BaseModifier):
     def model(self):
         return self.sim.model
 
-
-###########################################################################################
-#### Adapted from: https://github.com/openai/mujoco-py/blob/master/mujoco_py/modder.py ####
-###########################################################################################
+    def update(self):
+        """
+        Propagates the changes made up to this point through the simulation
+        """
+        self.sim.set_constants()
+        self.sim.forward()
 
 
 class MujocoLightModifier(MujocoBaseModifier, LightModifier):
@@ -157,6 +162,9 @@ class MujocoCameraModifier(MujocoBaseModifier, CameraModifier):
         camid = self.get_camid(name)
         assert camid > -1, "Unknown camera %s" % name
         return self.model.cam_quat[camid]
+
+    def set_rot(self, name: AnyStr, value: Array) -> None:
+        pass
 
     def set_quat(self, name: AnyStr, value: Array) -> None:
         value = list(value)
@@ -355,6 +363,13 @@ class MujocoTextureModifier(MujocoBaseModifier, TextureModifier):
             return self._geom_checker_mats[geom_id]
 
     def set_checker(self, name: AnyStr, rgb1: RGB, rgb2: RGB):
+        geom_id, mat_id, tex_id = self.get_ids(name)
+
+        if tex_id < 0:
+            warnings.warn("Setting checker texture only available for Textures. "
+                          "Make sure to define Textures in the corresponding XML to use this feature.")
+            return
+
         bitmap = self.get_texture(name).bitmap
         cbd1, cbd2 = self.get_checker_matrices(name)
 
@@ -364,6 +379,30 @@ class MujocoTextureModifier(MujocoBaseModifier, TextureModifier):
 
         self.upload_texture(name)
         return bitmap
+
+    def get_rgb(self, name) -> Array:
+        """
+        Grabs rgb color of a specific geom
+
+        Args:
+            name (str): Name of the geom
+        Returns:
+            np.array: (r,g,b) geom colors
+        """
+        geom_id, mat_id, tex_id = self.get_ids(name)
+
+
+        if tex_id >= 0 or name == 'skybox':
+            bitmap = self.get_texture(name).bitmap
+            return bitmap[..., :]
+        elif mat_id >= 0 and tex_id < 0:
+            # Warn the user if changing mat_rgba has no effect!
+            if self.model.geom_rgba[geom_id] != [0.5, 0.5, 0.5, 1]:
+                return self.model.geom_rgba[geom_id, :3]
+            return self.model.mat_rgba[geom_id, :3]
+        else:
+            geom_id = self.model.geom_name2id(name)
+            return self.model.geom_rgba[geom_id, :3]
 
     def set_gradient(self, name: AnyStr, rgb1: RGB, rgb2: RGB, vertical: bool = True):
         """
@@ -378,6 +417,13 @@ class MujocoTextureModifier(MujocoBaseModifier, TextureModifier):
         # NOTE: MuJoCo's gradient uses a sigmoid. Here we simplify
         # and just use a linear gradient... We could change this
         # to just use a tanh-sigmoid if needed.
+        geom_id, mat_id, tex_id = self.get_ids(name)
+
+        if tex_id < 0:
+            warnings.warn("Setting gradient only available for Textures. "
+                          "Make sure to define Textures in the corresponding XML to use this feature.")
+            return
+
         bitmap = self.get_texture(name).bitmap
         h, w = bitmap.shape[:2]
         if vertical:
@@ -391,12 +437,28 @@ class MujocoTextureModifier(MujocoBaseModifier, TextureModifier):
         self.upload_texture(name)
         return bitmap
 
-    def set_rgb(self, name: AnyStr, rgb: RGB):
-        bitmap = self.get_texture(name).bitmap
-        bitmap[..., :] = np.asarray(rgb)
+    def get_ids(self, name: AnyStr):
+        geom_id = self.model.geom_name2id(name)
+        mat_id = self.model.geom_matid[geom_id]
+        tex_id = self.model.mat_texid[mat_id]
+        return geom_id, mat_id, tex_id
 
-        self.upload_texture(name)
-        return bitmap
+    def set_rgb(self, name: AnyStr, rgb: RGB) -> Optional[Array]:
+        geom_id, mat_id, tex_id = self.get_ids(name)
+
+        rgb = np.floor(rgb) / 255.
+
+        if tex_id >= 0 or name == 'skybox':
+            bitmap = self.get_texture(name).bitmap
+            bitmap[..., :] = np.asarray(rgb)
+            self.upload_texture(name)
+            return bitmap
+        else:
+            if mat_id >= 0 and tex_id < 0:
+                warnings.warn("Changing material rgba value does not effect the sim. "
+                              "Changing corresponding geometry rgba value instead.")
+                # TODO: One material can be used for multiple objects; should we change each one of them simultaneously?
+            self.model.geom_rgba[geom_id, :3] = rgb
 
     def set_noise(self, name: AnyStr, rgb1: RGB, rgb2: RGB, fraction: float = 0.9):
         """
@@ -406,6 +468,13 @@ class MujocoTextureModifier(MujocoBaseModifier, TextureModifier):
         - rgb2 (array): color of mod_func noise foreground color
         - fraction (float): fraction of pixels with foreground color
         """
+        geom_id, mat_id, tex_id = self.get_ids(name)
+
+        if tex_id < 0:
+            warnings.warn("Setting noise only available for Textures. "
+                          "Make sure to define Textures in the corresponding XML to use this feature.")
+            return
+
         bitmap = self.get_texture(name).bitmap
         h, w = bitmap.shape[:2]
         mask = self.random_state.uniform(size=(h, w)) < fraction
@@ -439,7 +508,7 @@ class MujocoTextureModifier(MujocoBaseModifier, TextureModifier):
         vertical = bool(self.random_state.uniform() > 0.5)
         return self.set_gradient(name, rgb1, rgb2, vertical=vertical)
 
-    def rand_rgb(self, name: AnyStr):
+    def rand_rgb(self, name: AnyStr) -> Optional[Array]:
         rgb = self.get_rand_rgb()
         return self.set_rgb(name, rgb)
 
@@ -449,9 +518,7 @@ class MujocoTextureModifier(MujocoBaseModifier, TextureModifier):
         return self.set_noise(name, rgb1, rgb2, fraction)
 
     def upload_texture(self, name: AnyStr):
-        """
-        Uploads the texture to the GPU so it's available in the rendering.
-        """
+        """Uploads the texture to the GPU so it's available in the rendering."""
         texture = self.get_texture(name)
         if not self.sim.render_contexts:
             cymj.MjRenderContextOffscreen(self.sim)
@@ -478,8 +545,7 @@ class MujocoTextureModifier(MujocoBaseModifier, TextureModifier):
 
     def get_rand_rgb(self, n=1):
         def _rand_rgb():
-            return np.array(self.random_state.uniform(size=3) * 255,
-                            dtype=np.uint8)
+            return np.array(self.random_state.uniform(size=3) * 255, dtype=np.uint8)
 
         if n == 1:
             return _rand_rgb()
@@ -534,9 +600,6 @@ class MujocoTextureModifier(MujocoBaseModifier, TextureModifier):
         cbd1 = np.expand_dims(np.row_stack(((h + 1) // 2) * [re, ro]), -1)[:h, :w]
         cbd2 = np.expand_dims(np.row_stack(((h + 1) // 2) * [ro, re]), -1)[:h, :w]
         return cbd1, cbd2
-
-
-###########################################################################################
 
 
 class mjtJoint(Enum):
@@ -662,8 +725,8 @@ class MujocoBodyModifier(MujocoBaseModifier, InertialModifier):
             "mass": self.set_mass,
             "diaginertia": self.set_diaginertia,
             "pos": self.set_pos,
-            "ipos": self.set_ipos,
-            "quat": self.set_quat,
+            "ipos": self.set_ipos, # TODO: Really?
+            "quat": self.set_quat, # TODO: Should we rather 
             "friction": self.set_friction,
         }
         return setters
@@ -671,6 +734,13 @@ class MujocoBodyModifier(MujocoBaseModifier, InertialModifier):
     def _get_bodyid(self, name: AnyStr) -> int:
         assert self.model.body_name2id(name) > -1, "Unknown body %s" % name
         return self.model.body_name2id(name)
+
+    def set_geom_type(self, name: AnyStr, value: int):
+        bodyid = self._get_bodyid(name)
+
+        if self.model.geom_type[bodyid] == 7:
+            return
+        self.model.geom_type[bodyid] = value
 
     def set_pos(self, name: AnyStr, value: Array) -> None:
         value = list(value)

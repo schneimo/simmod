@@ -95,6 +95,10 @@ class BaseModifier(ABC):
     def standard_setters(self) -> Dict:
         raise NotImplementedError
 
+    @abstractmethod
+    def update(self):
+        raise NotImplementedError
+
 
 class LightModifier(BaseModifier):
 

@@ -1,6 +1,5 @@
 """
-Copyright (c) 2020, Moritz Schneider
-@Author: Moritz Schneider
+Copyright (c) 2021, Moritz Schneider.
 """
 from typing import Dict, AnyStr
 import yaml

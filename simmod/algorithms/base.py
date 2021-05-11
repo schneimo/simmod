@@ -35,9 +35,9 @@ class BaseAlgorithm(ABC):
         the given modifier.
 
         Args:
-            modifier:            Modifier to change the parameter defined in the instrumentation
-            instrumentation:    Configuration of the parameter we want  change
-            **kwargs:           Additional arguments for the setter function of the modifier
+            modifier: Modifier to change the parameter defined in the instrumentation
+            instrumentation: Configuration of the parameter we want  change
+            **kwargs: Additional arguments for the setter function of the modifier
 
         Returns:
             Return of the setter function

@@ -22,6 +22,12 @@ def delayed_buffer_item(buffer_item: List, buffer_item_len: int, item: Any):
     return buffer_item, item_cur
 
 
+class ValueLoggerWrapper(gym.Wrapper):
+
+    def __init__(self, env: gym.Env, ):
+        super(ValueLoggerWrapper, self).__init__(env)
+
+
 class _WelfordsAlgorithm:
     """Implementation of the Welford's algorithm for calculating the variance on the go.
 
