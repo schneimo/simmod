@@ -8,7 +8,7 @@ Parameters can be changed directly with the simulation attributes or if applicab
 Currently supported simulations:
 - Mujoco
 
-Furthermore, online modification of built-in variables is also supported.
+Furthermore, online modification of built-in Python variables of the simulation is also supported.
 
 ## Installation
 Clone the repo and cd into it:
