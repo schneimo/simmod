@@ -726,7 +726,7 @@ class MujocoBodyModifier(MujocoBaseModifier, InertialModifier):
             "diaginertia": self.set_diaginertia,
             "pos": self.set_pos,
             "ipos": self.set_ipos, # TODO: Really?
-            "quat": self.set_quat, # TODO: Should we rather 
+            "quat": self.set_quat, # TODO: Should we rather
             "friction": self.set_friction,
         }
         return setters
