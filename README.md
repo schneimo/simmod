@@ -1,5 +1,16 @@
 # <div align="center"> S🔧MM⚙️D </div>
 ### <div align="center"> A Framework to Modify Simulations Online </div>
+
+
+<p align="center">
+    <a href="https://choosealicense.com/licenses/mit/">
+        <img alt="license" src="https://img.shields.io/github/license/moritztaylor/simmod"/>
+    </a>
+    <a href="https://pypi.org/project/disent">
+        <img alt="python version" src="https://img.shields.io/badge/python-3.8-brightgreen"/>
+    </a>
+</p>
+
 A simple framework to change visual and physical parameters of various simulations without reloading the simulation and through a standardized interface.
 
 Changing parameters online is especially useful for domain randomization and curriculum learning in robotics research. Thus several algorithms for domain randomization are directly included (Uniform Domain Randomization, ...).
