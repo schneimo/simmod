@@ -1,4 +1,5 @@
-# SimMod: A Framework to Modify Simulations Online
+# <div align="center"> S🔧MM⚙️D </div>
+### <div align="center"> A Framework to Modify Simulations Online </div>
 A simple framework to change visual and physical parameters of various simulations without reloading the simulation and through a standardized interface.
 
 Changing parameters online is especially useful for domain randomization and curriculum learning in robotics research. Thus several algorithms for domain randomization are directly included (Uniform Domain Randomization, ...).
