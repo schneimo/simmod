@@ -61,15 +61,21 @@ class UniformDomainRandomization(BaseAlgorithm):
         n_params = len(sig.parameters) - n_kwargs - 1  # Exclude name & non-positional arguments
         # TODO: Randomize non-positional arguments
 
-        lower_bound = instrumentation.lower_bound
-        upper_bound = instrumentation.upper_bound
+        x, y = instrumentation.parameter_values
         new_values = list()
-        assert len(lower_bound) == len(upper_bound)
-        n = len(lower_bound)
+        assert len(x) == len(y)
+        n = len(x)
         for _ in range(n_params):
-            values = np.array([self.random_state.uniform(lower_bound[i], upper_bound[i]) for i in range(n)])
+            dist = instrumentation.distribution
+            if dist == 'uniform':
+                values = np.array([self.random_state.uniform(x[i], y[i]) for i in range(n)])
+            elif dist == 'normal' or dist == 'gaussian':
+                values = np.array([self.random_state.normal(x[i], y[i]) for i in range(n)])
+            elif dist == 'loguniform':
+                values = np.exp([self.random_state.uniform(x[i], y[i]) for i in range(n)])
+            else:
+                raise ValueError(f"Distribution type '{dist}' not available, use 'uniform', 'loguniform' or 'normal'")
             new_values.append(values)
-        #self._record_new_val(modifier, instrumentation, new_values)
         instrumentation.update(new_values)
         return setter_func(object_name, *new_values, **kwargs)
 

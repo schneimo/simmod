@@ -162,10 +162,16 @@ class _NoiseWrapper(gym.Wrapper):
                 # TODO: More baseline types, i.e. calculated by the Welford algorithm
                 if noise_baseline == 'range':
                     self._noise_range.append(_Range(high, bounded_high, low, bounded_low))
+                elif noise_baseline == 'variance':
+                    pass
+                else:
+                    raise ValueError(f"Unknown noise")
         elif isinstance(noise_baseline, list):
             assert len(noise_baseline) == len(space.low)
             for val in noise_baseline:
                 self._noise_range.append(_Range(val, True, -val, True))
+        elif isinstance(noise_baseline, float):
+            pass
         self.key_name = f'wrapper:{type(self).__name__}'
         self._setup_env_metadata()
 
@@ -289,9 +295,9 @@ class ObservationWrapper(_NoiseWrapper):
             env: OpenAI Gym environment
             space: Relevant space of the environment to calculate noise for
             noise_process: Noise process (at the moment only np.uniform)
-            noise_scale: Scaling scalar or vector to multiplicate the noise with
+            noise_scale: Scaling scalar or vector to multiply the noise with
             noise_baseline: Metric on which the noise calculation will be based (i.e. range, variance)
-            dtype: Numpy dtype for the noise matrix
+            dtype: NumPy dtype for the noise matrix
         """
         super().__init__(env, env.observation_space, noise_process, noise_scale, noise_baseline, dtype, *args, **kwargs)
         self.dtype = np.dtype(dtype)

@@ -16,13 +16,13 @@ from enum import Enum
 from typing import AnyStr, List, Union, Dict, Tuple
 
 import numpy as np
-from mujoco_py import cymj
+from mujoco_py import cymj, functions
 
 import warnings
 
-from simmod.modification.base_modifier import BaseModifier, LightModifier, MaterialModifier, TextureModifier, \
-    CameraModifier, JointModifier, InertialModifier
+from simmod.modification.base_modifier import BaseModifier, register_as_setter
 from simmod.utils.typings_ import *
+from simmod.utils import rotations
 
 
 class MujocoBaseModifier(BaseModifier):
@@ -48,7 +48,7 @@ class MujocoBaseModifier(BaseModifier):
         self.sim.forward()
 
 
-class MujocoLightModifier(MujocoBaseModifier, LightModifier):
+class MujocoLightModifier(MujocoBaseModifier):
 
     def __init__(self, *args, **kwargs):
         self._default_config_file_path = 'data/mujoco/default_light_config.yaml'
@@ -58,19 +58,7 @@ class MujocoLightModifier(MujocoBaseModifier, LightModifier):
     def names(self) -> List:
         return self.model.light_names
 
-    @property
-    def standard_setters(self) -> Dict:
-        setters = {
-            "dir": self.set_dir,
-            "active": self.set_active,
-            "pos": self.set_pos,
-            "specular": self.set_specular,
-            "ambient": self.set_ambient,
-            "diffuse": self.set_diffuse,
-            "castshadow": self.set_castshadow
-        }
-        return setters
-
+    @register_as_setter("pos")
     def set_pos(self, name: AnyStr, value: Array) -> None:
         lightid = self.get_lightid(name)
         assert lightid > -1, "Unknown light %s" % name
@@ -80,6 +68,7 @@ class MujocoLightModifier(MujocoBaseModifier, LightModifier):
 
         self.model.light_pos[lightid] = value
 
+    @register_as_setter("dir")
     def set_dir(self, name: AnyStr, value: Array) -> None:
         lightid = self.get_lightid(name)
         assert lightid > -1, "Unknown light %s" % name
@@ -90,12 +79,14 @@ class MujocoLightModifier(MujocoBaseModifier, LightModifier):
         self.model.light_dir[lightid] = value
 
     # TODO: Bool instead of int-value?
+    @register_as_setter("active")
     def set_active(self, name: AnyStr, value: int) -> None:
         lightid = self.get_lightid(name)
         assert lightid > -1, "Unknown light %s" % name
         assert value >= 0 or value <= 1, "Expected value in [0, 1], got %s" % value
         self.model.light_active[lightid] = round(value)
 
+    @register_as_setter("specular")
     def set_specular(self, name: AnyStr, value: Array) -> None:
         lightid = self.get_lightid(name)
         assert lightid > -1, "Unknown light %s" % name
@@ -105,6 +96,7 @@ class MujocoLightModifier(MujocoBaseModifier, LightModifier):
 
         self.model.light_specular[lightid] = value
 
+    @register_as_setter("ambient")
     def set_ambient(self, name: AnyStr, value: Array) -> None:
         lightid = self.get_lightid(name)
         assert lightid > -1, "Unknown light %s" % name
@@ -114,6 +106,7 @@ class MujocoLightModifier(MujocoBaseModifier, LightModifier):
 
         self.model.light_ambient[lightid] = value
 
+    @register_as_setter("diffuse")
     def set_diffuse(self, name: AnyStr, value: Array) -> None:
         lightid = self.get_lightid(name)
         assert lightid > -1, "Unknown light %s" % name
@@ -124,6 +117,7 @@ class MujocoLightModifier(MujocoBaseModifier, LightModifier):
         self.model.light_diffuse[lightid] = value
 
     # TODO: Int instead of bool-value?
+    @register_as_setter("castshadow")
     def set_castshadow(self, name: AnyStr, value: bool) -> None:
         lightid = self.get_lightid(name)
         assert lightid > -1, "Unkwnown light %s" % name
@@ -133,7 +127,7 @@ class MujocoLightModifier(MujocoBaseModifier, LightModifier):
         return self.model.light_name2id(name)
 
 
-class MujocoCameraModifier(MujocoBaseModifier, CameraModifier):
+class MujocoCameraModifier(MujocoBaseModifier):
 
     def __init__(self, *args, **kwargs):
         self._default_config_file_path = 'data/mujoco/default_camera_config.yaml'
@@ -143,16 +137,14 @@ class MujocoCameraModifier(MujocoBaseModifier, CameraModifier):
     def names(self) -> List:
         return self.model.camera_names
 
-    @property
-    def standard_setters(self) -> Dict:
-        setters = {
-            "fovy": self.set_fovy,
-            "quat": self.set_quat,
-            "pos": self.set_pos,
-        }
-        return setters
-
+    @register_as_setter("fovy")
     def set_fovy(self, name: AnyStr, value: float) -> None:
+        camid = self.get_camid(name)
+        assert 0 < value < 180
+        assert camid > -1, "Unknown camera %s" % name
+        self.model.cam_fovy[camid] = value
+
+    def set_ipd(self, name: AnyStr, value: float) -> None:
         camid = self.get_camid(name)
         assert 0 < value < 180
         assert camid > -1, "Unknown camera %s" % name
@@ -163,9 +155,14 @@ class MujocoCameraModifier(MujocoBaseModifier, CameraModifier):
         assert camid > -1, "Unknown camera %s" % name
         return self.model.cam_quat[camid]
 
-    def set_rot(self, name: AnyStr, value: Array) -> None:
-        pass
+    @register_as_setter("euler")
+    def set_euler(self, name: AnyStr, value: Array) -> None:
+        value = list(value)
+        assert len(value) == 3, "Expected value of length 3, instead got %s" % value
+        value = rotations.euler2quat(value)
+        self.set_quat(name, value)
 
+    @register_as_setter("quat")
     def set_quat(self, name: AnyStr, value: Array) -> None:
         value = list(value)
         assert len(value) == 4, "Expected value of length 4, instead got %s" % value
@@ -178,6 +175,7 @@ class MujocoCameraModifier(MujocoBaseModifier, CameraModifier):
         assert camid > -1, "Unknown camera %s" % name
         return self.model.cam_pos[camid]
 
+    @register_as_setter("pos")
     def set_pos(self, name: AnyStr, value: Array) -> None:
         value = list(value)
         assert len(value) == 3, "Expected value of length 3, instead got %s" % value
@@ -189,7 +187,7 @@ class MujocoCameraModifier(MujocoBaseModifier, CameraModifier):
         return self.model.camera_name2id(name)
 
 
-class MujocoMaterialModifier(MujocoBaseModifier, MaterialModifier):
+class MujocoMaterialModifier(MujocoBaseModifier):
     """
     Modify material properties of a model. Example use:
 
@@ -208,25 +206,19 @@ class MujocoMaterialModifier(MujocoBaseModifier, MaterialModifier):
     def names(self) -> List:
         return self.model.geom_names
 
-    @property
-    def standard_setters(self) -> Dict:
-        setters = {
-            "specular": self.set_specularity,
-            "shininess": self.set_shininess,
-            "reflectance": self.set_reflectance,
-        }
-        return setters
-
+    @register_as_setter("specular")
     def set_specularity(self, name: AnyStr, value: float) -> None:
         assert 0 <= value <= 1.0
         mat_id = self.get_mat_id(name)
         self.model.mat_specular[mat_id] = value
 
+    @register_as_setter("shininess")
     def set_shininess(self, name: AnyStr, value: float) -> None:
         assert 0 <= value <= 1.0
         mat_id = self.get_mat_id(name)
         self.model.mat_shininess[mat_id] = value
 
+    @register_as_setter("reflectance")
     def set_reflectance(self, name: AnyStr, value: float) -> None:
         assert 0 <= value <= 1.0
         mat_id = self.get_mat_id(name)
@@ -238,23 +230,6 @@ class MujocoMaterialModifier(MujocoBaseModifier, MaterialModifier):
         # relative to the extent of the body.
         self.model.mat_texuniform[mat_id] = 0
         self.model.mat_texrepeat[mat_id, :] = [repeat_x, repeat_y]
-
-    def rand_all(self, name: AnyStr) -> None:
-        self.rand_specularity(name)
-        self.rand_shininess(name)
-        self.rand_reflectance(name)
-
-    def rand_specularity(self, name: AnyStr) -> None:
-        value = 0.1 + 0.2 * self.random_state.uniform()
-        self.set_specularity(name, value)
-
-    def rand_shininess(self, name: AnyStr) -> None:
-        value = 0.1 + 0.5 * self.random_state.uniform()
-        self.set_shininess(name, value)
-
-    def rand_reflectance(self, name: AnyStr) -> None:
-        value = 0.1 + 0.5 * self.random_state.uniform()
-        self.set_reflectance(name, value)
 
     def rand_texrepeat(self, name: AnyStr, max_repeat: int = 5) -> None:
         repeat_x = self.random_state.randint(0, max_repeat) + 1
@@ -293,7 +268,7 @@ class Texture:
         return data.reshape((self.height, self.width, 3))
 
 
-class MujocoTextureModifier(MujocoBaseModifier, TextureModifier):
+class MujocoTextureModifier(MujocoBaseModifier):
     """
     Modify textures in model. Example use:
 
@@ -325,16 +300,6 @@ class MujocoTextureModifier(MujocoBaseModifier, TextureModifier):
     def names(self) -> List:
         return self.model.geom_names
 
-    @property
-    def standard_setters(self) -> Dict:
-        setters = {
-            "checker": self.set_checker,
-            "gradient": self.set_gradient,
-            "rgb": self.set_rgb,
-            "noise": self.set_noise,
-        }
-        return setters
-
     def get_texture(self, name: AnyStr) -> Texture:
         if name == 'skybox':
             tex_id = -1
@@ -362,6 +327,7 @@ class MujocoTextureModifier(MujocoBaseModifier, TextureModifier):
             geom_id = self.model.geom_name2id(name)
             return self._geom_checker_mats[geom_id]
 
+    @register_as_setter("checker")
     def set_checker(self, name: AnyStr, rgb1: RGB, rgb2: RGB):
         geom_id, mat_id, tex_id = self.get_ids(name)
 
@@ -391,7 +357,6 @@ class MujocoTextureModifier(MujocoBaseModifier, TextureModifier):
         """
         geom_id, mat_id, tex_id = self.get_ids(name)
 
-
         if tex_id >= 0 or name == 'skybox':
             bitmap = self.get_texture(name).bitmap
             return bitmap[..., :]
@@ -404,6 +369,7 @@ class MujocoTextureModifier(MujocoBaseModifier, TextureModifier):
             geom_id = self.model.geom_name2id(name)
             return self.model.geom_rgba[geom_id, :3]
 
+    @register_as_setter("gradient")
     def set_gradient(self, name: AnyStr, rgb1: RGB, rgb2: RGB, vertical: bool = True):
         """
         Creates a linear gradient from rgb1 to rgb2.
@@ -443,10 +409,11 @@ class MujocoTextureModifier(MujocoBaseModifier, TextureModifier):
         tex_id = self.model.mat_texid[mat_id]
         return geom_id, mat_id, tex_id
 
+    @register_as_setter("rgb")
     def set_rgb(self, name: AnyStr, rgb: RGB) -> Optional[Array]:
         geom_id, mat_id, tex_id = self.get_ids(name)
 
-        rgb = np.floor(rgb) / 255.
+        rgb = np.round(rgb) / 255.
 
         if tex_id >= 0 or name == 'skybox':
             bitmap = self.get_texture(name).bitmap
@@ -460,6 +427,7 @@ class MujocoTextureModifier(MujocoBaseModifier, TextureModifier):
                 # TODO: One material can be used for multiple objects; should we change each one of them simultaneously?
             self.model.geom_rgba[geom_id, :3] = rgb
 
+    @register_as_setter("noise")
     def set_noise(self, name: AnyStr, rgb1: RGB, rgb2: RGB, fraction: float = 0.9):
         """
         Args:
@@ -485,19 +453,22 @@ class MujocoTextureModifier(MujocoBaseModifier, TextureModifier):
         self.upload_texture(name)
         return bitmap
 
-    def randomize(self) -> None:
-        for name in self.sim.model.geom_names:
-            self.rand_all(name)
+    @register_as_setter("size")
+    def set_size(self, name: AnyStr, value: Array):
+        geom_id = self.model.geom_name2id(name)
+        assert geom_id > -1, "Unknown geom from body %s" % name
 
-    def rand_all(self, name: AnyStr):
-        choices = [
-            self.rand_checker,
-            self.rand_gradient,
-            self.rand_rgb,
-            self.rand_noise,
-        ]
-        choice = self.random_state.randint(len(choices))
-        return choices[choice](name)
+        value = list(value)
+        assert len(value) == 3, "Expected 3-dim value, got %s" % value
+
+        self.model.geom_size[geom_id] = value
+        self.sim.set_constants()
+
+    def get_size(self, name: AnyStr):
+        geom_id = self.model.geom_name2id(name)
+        assert geom_id > -1, "Unknown geom from body %s" % name
+
+        return self.model.geom_size[geom_id]
 
     def rand_checker(self, name: AnyStr):
         rgb1, rgb2 = self.get_rand_rgb(2)
@@ -609,7 +580,7 @@ class mjtJoint(Enum):
     mjJNT_HINGE = 3
 
 
-class MujocoJointModifier(MujocoBaseModifier, JointModifier):
+class MujocoJointModifier(MujocoBaseModifier):
 
     def __init__(self, *args, **kwargs) -> None:
         self._default_config_file_path = 'data/mujoco/default_joint_config.yaml'
@@ -618,19 +589,6 @@ class MujocoJointModifier(MujocoBaseModifier, JointModifier):
     @property
     def names(self) -> List:
         return self.model.joint_names
-
-    @property
-    def standard_setters(self) -> Dict:
-        setters = {
-            "range": self.set_range,
-            "damping": self.set_damping,
-            "armature": self.set_armature,
-            "frictionloss": self.set_frictionloss,
-            "stiffness": self.set_stiffness,
-            "pos": self.set_pos,
-            "quat": self.set_quat,
-        }
-        return setters
 
     def _get_joint_type(self, name: AnyStr) -> mjtJoint:
         jointid = self._get_jointid(name)
@@ -644,6 +602,7 @@ class MujocoJointModifier(MujocoBaseModifier, JointModifier):
         jointid = self._get_jointid(name)
         return self.model.jnt_dofadr[jointid]
 
+    @register_as_setter("range")
     def set_range(self, name: AnyStr, value: Array) -> None:
         """
         Values should be in radian. If simulation assumes degree values
@@ -655,6 +614,7 @@ class MujocoJointModifier(MujocoBaseModifier, JointModifier):
         assert len(value) == 2, "Expected 2-dim value, got %s" % value
         self.model.jnt_range[jointid] = value
 
+    @register_as_setter("damping")
     def set_damping(self, name: AnyStr, value: float) -> None:
         jointid = self._get_jointid(name)
         assert jointid > -1, "Unknown joint %s" % name
@@ -664,18 +624,21 @@ class MujocoJointModifier(MujocoBaseModifier, JointModifier):
         joint_dofadr = self._get_joint_dofadr(name)
         self.model.dof_damping[joint_dofadr] = value
 
+    @register_as_setter("armature")
     def set_armature(self, name: AnyStr, value: float) -> None:
         jointid = self._get_jointid(name)
         assert jointid > -1, "Unknown joint %s" % name
         joint_dofadr = self._get_joint_dofadr(name)
         self.model.dof_armature[joint_dofadr] = value
 
+    @register_as_setter("stiffness")
     def set_stiffness(self, name: AnyStr, value: float) -> None:
         jointid = self._get_jointid(name)
         assert jointid > -1, "Unknown joint %s" % name
 
         self.model.jnt_stiffness[jointid] = value
 
+    @register_as_setter("frictionloss")
     def set_frictionloss(self, name: AnyStr, value: float) -> None:
         jointid = self._get_jointid(name)
         assert jointid > -1, "Unknown joint %s" % name
@@ -687,6 +650,7 @@ class MujocoJointModifier(MujocoBaseModifier, JointModifier):
         assert jointid > -1, "Unknown joint %s" % name
         return self.model.jnt_quat[jointid]
 
+    @register_as_setter("quat")
     def set_quat(self, name, value: Array) -> None:
         value = list(value)
         assert len(value) == 4, (
@@ -700,6 +664,7 @@ class MujocoJointModifier(MujocoBaseModifier, JointModifier):
         assert jointid > -1, "Unknown joint %s" % name
         return self.model.jnt_pos[jointid]
 
+    @register_as_setter("pos")
     def set_pos(self, name: AnyStr, value: Array) -> None:
         value = list(value)
         assert len(value) == 3, (
@@ -709,7 +674,8 @@ class MujocoJointModifier(MujocoBaseModifier, JointModifier):
         self.model.jnt_pos[jointid] = value
 
 
-class MujocoBodyModifier(MujocoBaseModifier, InertialModifier):
+class MujocoBodyModifier(MujocoBaseModifier):
+    """Integrates attributes of XML references 'geom' and 'inertial' """
 
     def __init__(self, *args, **kwargs) -> None:
         self._default_config_file_path = 'data/mujoco/default_body_config.yaml'
@@ -718,18 +684,6 @@ class MujocoBodyModifier(MujocoBaseModifier, InertialModifier):
     @property
     def names(self) -> List:
         return self.model.body_names
-
-    @property
-    def standard_setters(self) -> Dict:
-        setters = {
-            "mass": self.set_mass,
-            "diaginertia": self.set_diaginertia,
-            "pos": self.set_pos,
-            "ipos": self.set_ipos, # TODO: Really?
-            "quat": self.set_quat, # TODO: Should we rather
-            "friction": self.set_friction,
-        }
-        return setters
 
     def _get_bodyid(self, name: AnyStr) -> int:
         assert self.model.body_name2id(name) > -1, "Unknown body %s" % name
@@ -742,25 +696,23 @@ class MujocoBodyModifier(MujocoBaseModifier, InertialModifier):
             return
         self.model.geom_type[bodyid] = value
 
+    @register_as_setter("pos")
     def set_pos(self, name: AnyStr, value: Array) -> None:
         value = list(value)
         assert len(value) == 3, (
                 "Expected value of length 3, instead got %s" % value)
         bodyid = self._get_bodyid(name)
         self.model.body_pos[bodyid] = value
+        self.update()
 
-    def set_ipos(self, name: AnyStr, value: Array) -> None:
-        value = list(value)
-        assert len(value) == 3, (
-                "Expected value of length 3, instead got %s" % value)
-        bodyid = self._get_bodyid(name)
-        self.model.body_ipos[bodyid] = value
-
+    @register_as_setter("mass")
     def set_mass(self, name: AnyStr, value: float) -> None:
         bodyid = self._get_bodyid(name)
 
         self.model.body_mass[bodyid] = value
+        self.update()
 
+    @register_as_setter("diaginerta")
     def set_diaginertia(self, name: AnyStr, value: Array) -> None:
         bodyid = self._get_bodyid(name)
 
@@ -768,6 +720,7 @@ class MujocoBodyModifier(MujocoBaseModifier, InertialModifier):
         assert len(value) == 3, "Expected 3-dim value, got %s" % value
 
         self.model.body_inertia[bodyid] = value
+        self.update()
 
     def set_fullinertia(self, name: AnyStr, value: Array) -> None:
         bodyid = self._get_bodyid(name)
@@ -778,7 +731,9 @@ class MujocoBodyModifier(MujocoBaseModifier, InertialModifier):
         # TODO: Transformation to principal inertias
 
         self.model.body_inertia[bodyid] = value
+        self.update()
 
+    @register_as_setter("friction")
     def set_friction(self, name: AnyStr, value: Array) -> None:
         bodyid = self._get_bodyid(name)
         geomid = self.model.body_geomadr[bodyid]
@@ -788,19 +743,21 @@ class MujocoBodyModifier(MujocoBaseModifier, InertialModifier):
         assert len(value) == 3, "Expected 3-dim value, got %s" % value
 
         self.model.geom_friction[geomid] = value
-        self.sim.set_constants()
+        self.update()
 
     def get_quat(self, name: AnyStr) -> Array:
         bodyid = self._get_bodyid(name)
         assert bodyid > -1, "Unknown joint %s" % name
         return self.model.body_quat[bodyid]
 
-    def set_quat(self, name, value: Array) -> None:
+    @register_as_setter("quat")
+    def set_quat(self, name: AnyStr, value: Array) -> None:
         value = list(value)
         assert len(value) == 4, "Expected value of length 4, instead got %s" % value
         bodyid = self._get_bodyid(name)
         assert bodyid > -1, "Unknown joint %s" % name
         self.model.body_quat[bodyid] = value
+        self.update()
 
 
 class MujocoActuatorModifier(MujocoBaseModifier):
@@ -813,19 +770,11 @@ class MujocoActuatorModifier(MujocoBaseModifier):
     def names(self) -> List:
         return self.model.actuator_names
 
-    @property
-    def standard_setters(self) -> Dict:
-        setters = {
-            "gear": self.set_gear,
-            "ctrlrange": self.set_ctrlrange,
-            "forcerange": self.set_forcerange
-        }
-        return setters
-
     def _get_actuatorid(self, name: AnyStr) -> int:
         assert self.model.actuator_name2id(name) > -1, "Unknown actuator %s" % name
         return self.model.actuator_name2id(name)
 
+    @register_as_setter("gear")
     def set_gear(self, name: AnyStr, value: Union[float, Array]) -> None:
         actuatorid = self._get_actuatorid(name)
 
@@ -838,6 +787,7 @@ class MujocoActuatorModifier(MujocoBaseModifier):
         self.model.actuator_gear[actuatorid] = value
         self.sim.set_constants()
 
+    @register_as_setter("forcerange")
     def set_forcerange(self, name: AnyStr, value: Array) -> None:
         actuatorid = self._get_actuatorid(name)
 
@@ -846,6 +796,7 @@ class MujocoActuatorModifier(MujocoBaseModifier):
         self.model.actuator_forcerange[actuatorid] = value
         self.sim.set_constants()
 
+    @register_as_setter("ctrlrange")
     def set_ctrlrange(self, name: AnyStr, value: Array) -> None:
         actuatorid = self._get_actuatorid(name)
 
@@ -865,14 +816,8 @@ class MujocoOptionModifier(MujocoBaseModifier):
     def names(self) -> List:
         return self.model.options
 
-    @property
-    def standard_setters(self) -> Dict:
-        setters = {
-            "gravity": self.set_gravity,
-        }
-        return setters
-
-    def set_gravity(self, name: AnyStr, value: Union[float, Array]) -> None:
+    @register_as_setter("gravity")
+    def set_gravity(self, name: AnyStr = None, value: Union[float, Array] = -9.81) -> None:
         if isinstance(value, float):
             value = [0, 0, value]
         elif len(value) < 3:
@@ -883,5 +828,24 @@ class MujocoOptionModifier(MujocoBaseModifier):
         else:
             raise ValueError
         self.model.opt.gravity[:] = value[:]
-        self.sim.set_constants()
+        self.update()
+
+    @register_as_setter("viscosity")
+    def set_viscosity(self, name: AnyStr = None, value: float = 0.0):
+        assert value >= 0., "Expected viscosity value >= 0, instead got %s" % value
+
+        self.sim.model.opt.viscosity = value
+
+    @register_as_setter("density")
+    def set_density(self, name: AnyStr = None, value: float = 0.0):
+        assert value >= 0., "Expected density value >= 0, instead got %s" % value
+
+        self.sim.model.opt.density = value
+        
+    @register_as_setter("timestep")
+    def set_density(self, name: AnyStr = None, value: float = 0.0):
+        assert value >= 0., "Expected timestep value >= 0, instead got %s" % value
+
+        self.sim.model.opt.timestep = value
+
 

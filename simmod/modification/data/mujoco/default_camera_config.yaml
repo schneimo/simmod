@@ -1,25 +1,26 @@
 ---
 options:
   execution: 'RESET'
-mass:
-  default:
-    values:
-      - [0.0, .inf]
 pos:
   default:
     values:
       - [-.Inf, .inf]
       - [-.Inf, .inf]
       - [-.Inf, .inf]
-diaginertia:
+euler:
   default:
     values:
-      - [0.0, .inf]
-      - [0.0, .inf]
-      - [0.0, .inf]
-friction:
+      - [0, 6.283185307]
+      - [0, 6.283185307]
+      - [0, 6.283185307]
+quat:
   default:
     values:
       - [0.0, 0.0]
       - [0.0, 0.0]
       - [0.0, 0.0]
+      - [0.0, 0.0]
+fovy:
+  default:
+    values:
+      - [0.0, 180.0]

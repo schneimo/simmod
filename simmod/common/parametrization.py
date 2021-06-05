@@ -2,8 +2,8 @@
 value ranges. All those variables are stored in an individual parameterization instance.
 """
 from abc import ABC
-from typing import Union, List, Callable, AnyStr, Tuple, Any, Dict, Optional
 from enum import Enum, auto
+from typing import Union, List, Callable, AnyStr, Tuple, Any, Dict, Optional
 
 import numpy as np
 
@@ -18,6 +18,12 @@ class Execution(Enum):
     RESET = auto()
 
 
+class Operation(Enum):
+    ADDITIVE = auto()
+    SCALING = auto()
+    REPLACING = auto()
+
+
 class Parametrization:
 
     def __init__(
@@ -25,14 +31,18 @@ class Parametrization:
             setter: AnyStr,
             object_name: AnyStr,
             parameter_range: Array,
-            execution: AnyStr,
-            parameter_type: Optional[object] = None,  # TODO: Not used at the moment
+            distribution: Optional[object],
+            operation: Optional[AnyStr],
+            execution: AnyStr = None,
             shape: Optional[Tuple] = None,
             name: Optional[AnyStr] = None
     ) -> None:
         self.setter = setter
         self.object_name = object_name
-        self.execution = Execution[execution]
+        self.distribution = distribution
+        self.operation = Operation[operation.upper()]
+        self.execution = Execution[execution.upper()] if execution is not None else Execution.RESET
+
         if shape is not None:
             assert len(parameter_range) == 2 and shape[-1] == 2, \
                 "If a shape is given the last dimension and the length of the range must match 2 (lower and higher bound)"
@@ -42,8 +52,8 @@ class Parametrization:
             if not isinstance(parameter_range, np.ndarray):
                 parameter_range = np.asarray(parameter_range)
             self.shape = parameter_range.shape
-        self.lower_bound = parameter_range.T[0]
-        self.upper_bound = parameter_range.T[1]
+        self._values_one = parameter_range.T[0]
+        self._values_two = parameter_range.T[1]
         self.name = name
         self.history = []
         self.current_val = None
@@ -52,8 +62,8 @@ class Parametrization:
         return f'{self.setter}:{self.object_name}={self.current_val}'
 
     @property
-    def parameter_range(self):
-        return (self.lower_bound, self.upper_bound)
+    def parameter_values(self):
+        return (self._values_one, self._values_two)
 
     def update(self, new_values, **kwargs):
         if self.current_val is not None:

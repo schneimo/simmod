@@ -3,4 +3,5 @@ options:
   execution: 'RESET'
 gravity:
   default:
-    - [9.775, 9.845]
+    values:
+      - [9.775, 9.845]

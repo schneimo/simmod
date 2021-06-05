@@ -5,7 +5,7 @@ import numpy as np
 from mujoco_py import load_model_from_xml, MjSim, MjViewer, load_model_from_path
 
 from simmod.modification.mujoco import MujocoBodyModifier
-from simmod.modification.mujoco import MujocoJointModifier
+from simmod.modification.mujoco import MujocoDynamicsModifier
 from simmod.modification.mujoco import MujocoLightModifier
 from simmod.modification.mujoco import MujocoCameraModifier
 
@@ -158,7 +158,7 @@ def test_mujoco_joint_modifier_damping():
     #
     model = load_model_from_path(TEST_MODEL_FURUTA_PATH)
     sim = MjSim(model)
-    jnt_mod = MujocoJointModifier(sim)
+    jnt_mod = MujocoDynamicsModifier(sim)
     jnt_mod.set_damping("arm_pole", 3e-4)
     sim.set_constants()
     traj_mod = np.asarray(start_trajectory(sim))
@@ -183,7 +183,7 @@ def test_mujoco_joint_modifier_damping():
     del sim, model, traj_mod
     model = load_model_from_path(TEST_MODEL_FURUTA_PATH)
     sim = MjSim(model)
-    jnt_mod = MujocoJointModifier(sim)
+    jnt_mod = MujocoDynamicsModifier(sim)
     jnt_mod.set_damping("arm_pole", 1e-4)
     sim.set_constants()
     traj_mod = np.asarray(start_trajectory(sim))

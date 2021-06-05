@@ -3,12 +3,15 @@ options:
   execution: 'RESET'
 gear:
   default:
-    - [0, .inf]
+    values:
+      - [0.0, .inf]
 ctrlrange:
   default:
-    - [-.Inf, .inf]
-    - [-.Inf, .inf]
+    values:
+      - [-.Inf, .inf]
+      - [-.Inf, .inf]
 forcerange:
   default:
-    - [-.Inf, .inf]
-    - [-.Inf, .inf]
+    values:
+      - [-.Inf, .inf]
+      - [-.Inf, .inf]

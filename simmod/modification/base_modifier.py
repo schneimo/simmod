@@ -6,10 +6,8 @@ If no configuration is given it is taken from a standard configuration file whic
 usually defines the object parameter bounds at infinity. This might make the simulation unstable. Therefore, it is
 recommended to define a configuration for each modifier. If a configuration is given only the objects which are defined in
 this configuration are used by the domain randomization algorithms.
-
-Copyright (c) 2020, Moritz Schneider
-@Author: Moritz Schneider
 """
+import abc
 from abc import ABC, abstractmethod
 from typing import List, Dict
 
@@ -19,7 +17,19 @@ from simmod.common.parametrization import Parametrization
 from simmod.utils.load_utils import load_yaml
 
 
-class BaseModifier(ABC):
+def register_as_setter(name):
+    def register(f):
+        if isinstance(f, property):
+            f.fget.registered_as_setter = True
+            f.fget.registered_setter_name = name
+        else:
+            f.registered_as_setter = True
+            f.registered_setter_name = name
+        return f
+    return register
+
+
+class BaseModifier(metaclass=abc.ABCMeta):
 
     def __init__(
             self,
@@ -28,6 +38,9 @@ class BaseModifier(ABC):
             *args,
             **kwargs
     ):
+        self._registered_setters = dict()
+        self._init_setters()
+
         if random_state is None:
             self.random_state = np.random.RandomState()
         elif isinstance(random_state, int):
@@ -58,8 +71,11 @@ class BaseModifier(ABC):
                 if object_name == 'default':
                     use_default = True
                     continue
-                range_val = config[setter][object_name]
-                mod_inst = Parametrization(setter, object_name, range_val, execution_point)
+                properties = config[setter][object_name]
+                range_val = properties['values']
+                distribution = properties['distribution'] if 'distribution' in properties.keys() else 'uniform'
+                operation = properties['operation'] if 'operation' in properties.keys() else 'replacing'
+                mod_inst = Parametrization(setter, object_name, range_val, distribution, operation, execution_point)
                 self.instrumentation.append(mod_inst)
 
             # If 'default' was specified for this setter, then we have to get the default configuration for all
@@ -67,8 +83,11 @@ class BaseModifier(ABC):
             if use_default:
                 diff = list(set(self.names) - set(object_names))
                 for object_name in diff:
-                    default_range_val = default[setter]
-                    mod_inst = Parametrization(setter, object_name, default_range_val, execution_point)
+                    properties = config[setter]['default']
+                    default_range_val = properties['values']
+                    distribution = properties['distribution'] if 'distribution' in properties.keys() else 'uniform'
+                    operation = properties['operation'] if 'operation' in properties.keys() else 'replacing'
+                    mod_inst = Parametrization(setter, object_name, default_range_val, distribution, operation, execution_point)
                     self.instrumentation.append(mod_inst)
 
     def _get_basic_config(self) -> Dict:
@@ -76,6 +95,15 @@ class BaseModifier(ABC):
         path = os.path.dirname(__file__)
         path = os.path.join(path, self._default_config_file_path)
         return load_yaml(path)
+
+    def _init_setters(self):
+        methods = [getattr(self, method_name) for method_name in dir(self) if callable(getattr(self, method_name))]
+        for method in methods:
+            if isinstance(method, property):
+                method = method.fget
+            if hasattr(method, 'registered_as_setter'):
+                if method.registered_as_setter:
+                    self._registered_setters[method.registered_setter_name] = method
 
     @staticmethod
     def _get_default_from_config(config: Dict) -> Dict:
@@ -93,7 +121,7 @@ class BaseModifier(ABC):
 
     @property
     def standard_setters(self) -> Dict:
-        raise NotImplementedError
+        return self._registered_setters
 
     @abstractmethod
     def update(self):
