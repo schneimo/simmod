@@ -69,7 +69,7 @@ if __name__ == "__main__":
         print(f"'pole' mass changed to: ", mod_body.model.body_mass[pole_id])
         print(f"'arm' mass changed to: ", mod_body.model.body_mass[arm_id])
         for _ in range(100):
-            sim.data.ctrl[:] = 0
+            sim.data.ctrl[:] = 1.0
             sim.step()
             viewer.render()
         reset_pole(sim)

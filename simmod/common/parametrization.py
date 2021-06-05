@@ -41,11 +41,13 @@ class Parametrization:
         self.object_name = object_name
         self.distribution = distribution
         self.operation = Operation[operation.upper()]
-        self.execution = Execution[execution.upper()] if execution is not None else Execution.RESET
+        self.execution = Execution[execution.upper()] if execution is not None \
+            else Execution.RESET
 
         if shape is not None:
             assert len(parameter_range) == 2 and shape[-1] == 2, \
-                "If a shape is given the last dimension and the length of the range must match 2 (lower and higher bound)"
+                "If a shape is given the last dimension and the length of " \
+                "the range must match 2 (lower and higher bound)"
             self.shape = shape
             parameter_range = np.tile(parameter_range, (shape[0], 1))
         else:
@@ -113,7 +115,9 @@ class Scalar(Array):
             lower: Num = 0,
             upper: Num = 1
     ) -> None:
-        super().__init__(mod_func, init=np.array([init]), lower=np.array([lower]), upper=np.array([upper]))
+        super().__init__(mod_func,
+                         init=np.array([init]), lower=np.array([lower]),
+                         upper=np.array([upper]))
 
 
 class Boolean(Parameter):

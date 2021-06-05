@@ -1,3 +1,5 @@
+import pytest
+
 from simmod.modification.builtin import BuiltInModifier
 
 
@@ -22,8 +24,3 @@ def test_builtin_modifier():
         mod.set_value('not_available', 1)
     except ValueError:
         pass
-
-
-if __name__ == "__main__":
-    test_builtin_modifier()
-    print('Congratulations! No errors!')

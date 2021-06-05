@@ -6,17 +6,13 @@ https://github.com/openai/mujoco-py/blob/master/mujoco_py/modder.py
 
 Additional resource:
 https://github.com/ARISE-Initiative/robosuite/blob/65d3b9ad28d6e7a006e9eef7c5a0330816483be4/robosuite/utils/mjmod.py
-
-Copyright (c) 2021, Moritz Schneider
-@Author: Moritz Schneider
 """
 
 from collections import defaultdict
 from enum import Enum
-from typing import AnyStr, List, Union, Dict, Tuple
 
 import numpy as np
-from mujoco_py import cymj, functions
+from mujoco_py import cymj
 
 import warnings
 

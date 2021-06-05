@@ -54,17 +54,6 @@ class BulletJointModifier(BulletBaseModifier):
     def names(self) -> List:
         return list(self._joint_name_to_id.keys())
 
-    # @property
-    # def standard_setters(self) -> Dict:
-    #     setters = {
-    #         "range": self.set_range,
-    #         "damping": self.set_damping,
-    #         "armature": self.set_armature,
-    #         "frictionloss": self.set_frictionloss,
-    #         "stiffness": self.set_stiffness,
-    #     }
-    #     return setters
-
     def _get_jointid(self, name: AnyStr) -> int:
         return self._joint_name_to_id[name]
 
@@ -90,15 +79,6 @@ class BulletBodyModifier(BulletBaseModifier):
     def names(self) -> List:
         return list(self._joint_name_to_id.keys())
 
-    # @property
-    # def standard_setters(self) -> Dict:
-    #     setters = {
-    #         "mass": self.set_mass,
-    #         "diaginertia": self.set_diaginertia,
-    #         "friction": self.set_friction,
-    #     }
-    #     return setters
-
     def _get_bodyid(self, name: AnyStr) -> int:
         return self._joint_name_to_id[name]
 
@@ -110,7 +90,8 @@ class BulletBodyModifier(BulletBaseModifier):
     @register_as_setter("friction")
     def set_friction(self, name: AnyStr, value: float):
         link_id = self._get_bodyid(name)
-        self._pybullet_client.changeDynamics(self.sim, link_id, lateralFriction=value)
+        self._pybullet_client.changeDynamics(self.sim, link_id,
+                                             lateralFriction=value)
 
     @register_as_setter("diaginertia")
     def set_diaginertia(self, name: AnyStr, value: Array):
@@ -119,7 +100,8 @@ class BulletBodyModifier(BulletBaseModifier):
         value = list(value)
         assert len(value) == 3, "Expected 3-dim value, got %s" % value
 
-        self._pybullet_client.changeDynamics(self.sim, link_id, localInertiaDiagnoal=value[:])
+        self._pybullet_client.changeDynamics(self.sim, link_id,
+                                             localInertiaDiagonal=value[:])
 
 
 class BulletOptionModifier(BulletBaseModifier):
@@ -131,13 +113,6 @@ class BulletOptionModifier(BulletBaseModifier):
     @property
     def names(self) -> List:
         return self.model.options # TODO
-
-    # @property
-    # def standard_setters(self) -> Dict:
-    #     setters = {
-    #         "gravity": self.set_gravity,
-    #     }
-    #     return setters
 
     @register_as_setter("gravity")
     def set_gravity(self, name: AnyStr, value: Union[float, Array]) -> None:

@@ -1,13 +1,11 @@
 import pytest
-
 import xml.etree.ElementTree as ET
+
 import numpy as np
-from mujoco_py import load_model_from_xml, MjSim, MjViewer, load_model_from_path
+from mujoco_py import load_model_from_xml, MjSim, load_model_from_path
 
 from simmod.modification.mujoco import MujocoBodyModifier
 from simmod.modification.mujoco import MujocoJointModifier
-from simmod.modification.mujoco import MujocoLightModifier
-from simmod.modification.mujoco import MujocoCameraModifier
 
 TEST_MODEL_FURUTA_PATH = 'assets/test_mujoco_furuta.xml'
 TEST_MODEL_FRICTION_PATH = 'assets/test_mujoco_friction.xml'
@@ -204,7 +202,8 @@ def test_mujoco_body_modifier_position():
         n_kwargs = 0
 
     sig = signature(setter_func)
-    n_params = len(sig.parameters) - n_kwargs - 1  # Exclude name & non-positional arguments
+    n_params = len(
+        sig.parameters) - n_kwargs - 1  # Exclude name & non-positional arguments
 
     new_values = []
     for _ in range(n_params):
@@ -212,11 +211,3 @@ def test_mujoco_body_modifier_position():
         new_values.append(values)
 
     setter_func('pole', *new_values)
-
-
-if __name__ == "__main__":
-    test_mujoco_body_modifier_friction()
-    test_mujoco_joint_modifier_damping()
-    test_mujoco_body_modifier_mass()
-    test_mujoco_body_modifier_position()
-    test_mujoco_body_modifier_inertia()
