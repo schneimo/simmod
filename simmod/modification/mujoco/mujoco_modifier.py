@@ -22,7 +22,7 @@ import warnings
 
 from simmod.modification.base_modifier import BaseModifier, register_as_setter
 from simmod.utils.typings_ import *
-from simmod.utils import rotations
+from simmod.utils import rotations, deprecated
 
 
 class MujocoBaseModifier(BaseModifier):
@@ -60,6 +60,15 @@ class MujocoLightModifier(MujocoBaseModifier):
 
     @register_as_setter("pos")
     def set_pos(self, name: AnyStr, value: Array) -> None:
+        """Changes position of the light
+
+        More info:
+            http://www.mujoco.org/book/XMLreference.html#light
+
+        Args:
+            name: Internal name of the light
+            value: New values as array-type with length 3 (x, y and z value)
+        """
         lightid = self.get_lightid(name)
         assert lightid > -1, "Unknown light %s" % name
 
@@ -70,6 +79,15 @@ class MujocoLightModifier(MujocoBaseModifier):
 
     @register_as_setter("dir")
     def set_dir(self, name: AnyStr, value: Array) -> None:
+        """Changes direction of the light
+
+        More info:
+            http://www.mujoco.org/book/XMLreference.html#light
+
+        Args:
+            name: Internal name of the light
+            value: New values as array-type with length 3
+        """
         lightid = self.get_lightid(name)
         assert lightid > -1, "Unknown light %s" % name
 
@@ -81,6 +99,15 @@ class MujocoLightModifier(MujocoBaseModifier):
     # TODO: Bool instead of int-value?
     @register_as_setter("active")
     def set_active(self, name: AnyStr, value: int) -> None:
+        """Changes diffuse color of the light
+
+        More info:
+            http://www.mujoco.org/book/XMLreference.html#light
+
+        Args:
+            name: Internal name of the light
+            value: New values as array-type with length 3
+        """
         lightid = self.get_lightid(name)
         assert lightid > -1, "Unknown light %s" % name
         assert value >= 0 or value <= 1, "Expected value in [0, 1], got %s" % value
@@ -88,6 +115,15 @@ class MujocoLightModifier(MujocoBaseModifier):
 
     @register_as_setter("specular")
     def set_specular(self, name: AnyStr, value: Array) -> None:
+        """Changes specular color of the light
+
+        More info:
+            http://www.mujoco.org/book/XMLreference.html#light
+
+        Args:
+            name: Internal name of the light
+            value: New values as array-type with length 3
+        """
         lightid = self.get_lightid(name)
         assert lightid > -1, "Unknown light %s" % name
 
@@ -98,6 +134,15 @@ class MujocoLightModifier(MujocoBaseModifier):
 
     @register_as_setter("ambient")
     def set_ambient(self, name: AnyStr, value: Array) -> None:
+        """Changes ambient of the light
+
+        More info:
+            http://www.mujoco.org/book/XMLreference.html#light
+
+        Args:
+            name: Internal name of the light
+            value: New values as array-type with length 3
+        """
         lightid = self.get_lightid(name)
         assert lightid > -1, "Unknown light %s" % name
 
@@ -108,6 +153,15 @@ class MujocoLightModifier(MujocoBaseModifier):
 
     @register_as_setter("diffuse")
     def set_diffuse(self, name: AnyStr, value: Array) -> None:
+        """Changes diffuse color of the light
+
+        More info:
+            http://www.mujoco.org/book/XMLreference.html#light
+
+        Args:
+            name: Internal name of the light
+            value: New values as array-type with length 3
+        """
         lightid = self.get_lightid(name)
         assert lightid > -1, "Unknown light %s" % name
 
@@ -119,6 +173,15 @@ class MujocoLightModifier(MujocoBaseModifier):
     # TODO: Int instead of bool-value?
     @register_as_setter("castshadow")
     def set_castshadow(self, name: AnyStr, value: bool) -> None:
+        """Turns shadow of the light on or off
+
+        More info:
+            http://www.mujoco.org/book/XMLreference.html#light
+
+        Args:
+            name: Internal name of the light
+            value: Boolean for turning shadow generation on or off
+        """
         lightid = self.get_lightid(name)
         assert lightid > -1, "Unkwnown light %s" % name
         self.model.light_castshadow[lightid] = value
@@ -138,13 +201,16 @@ class MujocoCameraModifier(MujocoBaseModifier):
         return self.model.camera_names
 
     @register_as_setter("fovy")
-    def set_fovy(self, name: AnyStr, value: float) -> None:
-        camid = self.get_camid(name)
-        assert 0 < value < 180
-        assert camid > -1, "Unknown camera %s" % name
-        self.model.cam_fovy[camid] = value
+    def set_fovy(self, name: AnyStr, value: float = 45.) -> None:
+        """Changes the field of view of the camera
 
-    def set_ipd(self, name: AnyStr, value: float) -> None:
+        More info:
+            http://www.mujoco.org/book/XMLreference.html#camera
+
+        Args:
+            name: Internal name of the camera
+            value: New fov value as float
+        """
         camid = self.get_camid(name)
         assert 0 < value < 180
         assert camid > -1, "Unknown camera %s" % name
@@ -157,6 +223,18 @@ class MujocoCameraModifier(MujocoBaseModifier):
 
     @register_as_setter("euler")
     def set_euler(self, name: AnyStr, value: Array) -> None:
+        """Changes the rotation of the camera with euler angles
+
+        Changes the quaternion internally as Mujoco works with quaternions
+        during runtime
+
+        More info:
+            http://www.mujoco.org/book/XMLreference.html#camera
+
+        Args:
+            name: Internal name of the camera
+            value: New rotation values as array-type with length 3
+        """
         value = list(value)
         assert len(value) == 3, "Expected value of length 3, instead got %s" % value
         value = rotations.euler2quat(value)
@@ -164,6 +242,15 @@ class MujocoCameraModifier(MujocoBaseModifier):
 
     @register_as_setter("quat")
     def set_quat(self, name: AnyStr, value: Array) -> None:
+        """Changes the rotation of the camera using quaternions
+
+        More info:
+            http://www.mujoco.org/book/XMLreference.html#camera
+
+        Args:
+            name: Internal name of the camera
+            value: New quaternion values as array-type with length 4
+        """
         value = list(value)
         assert len(value) == 4, "Expected value of length 4, instead got %s" % value
         camid = self.get_camid(name)
@@ -177,6 +264,15 @@ class MujocoCameraModifier(MujocoBaseModifier):
 
     @register_as_setter("pos")
     def set_pos(self, name: AnyStr, value: Array) -> None:
+        """Changes the position of the camera
+
+        More info:
+            http://www.mujoco.org/book/XMLreference.html#camera
+
+        Args:
+            name: Internal name of the camera
+            value: New positions values as array-type with length 3
+        """
         value = list(value)
         assert len(value) == 3, "Expected value of length 3, instead got %s" % value
         camid = self.get_camid(name)
@@ -188,14 +284,13 @@ class MujocoCameraModifier(MujocoBaseModifier):
 
 
 class MujocoMaterialModifier(MujocoBaseModifier):
-    """
-    Modify material properties of a model. Example use:
+    """Modify material properties of a model.
 
+    Exemplary use:
         sim = MjSim(...)
         modder = MaterialModifier(sim)
         modder.set_specularity('some_geom', 0.5)
         modder.rand_all('another_geom')
-
     """
 
     def __init__(self, *args, **kwargs) -> None:
@@ -208,18 +303,45 @@ class MujocoMaterialModifier(MujocoBaseModifier):
 
     @register_as_setter("specular")
     def set_specularity(self, name: AnyStr, value: float) -> None:
+        """Sets the specularity value of the geoms material
+
+        More info:
+            http://www.mujoco.org/book/XMLreference.html#material
+
+        Args:
+            name: Internal name of the geom
+            value: New specularity value
+        """
         assert 0 <= value <= 1.0
         mat_id = self.get_mat_id(name)
         self.model.mat_specular[mat_id] = value
 
     @register_as_setter("shininess")
     def set_shininess(self, name: AnyStr, value: float) -> None:
+        """Sets the shininess value of the geoms material
+
+        More info:
+            http://www.mujoco.org/book/XMLreference.html#material
+
+        Args:
+            name: Internal name of the geom
+            value: New shininess value
+        """
         assert 0 <= value <= 1.0
         mat_id = self.get_mat_id(name)
         self.model.mat_shininess[mat_id] = value
 
     @register_as_setter("reflectance")
     def set_reflectance(self, name: AnyStr, value: float) -> None:
+        """Sets the reflectance value of the geoms material
+
+        More info:
+            http://www.mujoco.org/book/XMLreference.html#material
+
+        Args:
+            name: Internal name of the geom
+            value: New reflectance value
+        """
         assert 0 <= value <= 1.0
         mat_id = self.get_mat_id(name)
         self.model.mat_reflectance[mat_id] = value
@@ -231,6 +353,7 @@ class MujocoMaterialModifier(MujocoBaseModifier):
         self.model.mat_texuniform[mat_id] = 0
         self.model.mat_texrepeat[mat_id, :] = [repeat_x, repeat_y]
 
+    @deprecated("Direct randomization functions in modifiers should not be used")
     def rand_texrepeat(self, name: AnyStr, max_repeat: int = 5) -> None:
         repeat_x = self.random_state.randint(0, max_repeat) + 1
         repeat_y = self.random_state.randint(0, max_repeat) + 1
@@ -247,9 +370,7 @@ MJT_TEXTURE_ENUM = ['2d', 'cube', 'skybox']
 
 
 class Texture:
-    """
-    Helper class for operating on the MuJoCo textures.
-    """
+    """Helper class for operating on the MuJoCo textures."""
 
     __slots__ = ['id', 'type', 'height', 'width', 'tex_adr', 'tex_rgb']
 
@@ -269,14 +390,13 @@ class Texture:
 
 
 class MujocoTextureModifier(MujocoBaseModifier):
-    """
-    Modify textures in model. Example use:
+    """Modify textures in model.
 
+    Exemplary use:
         sim = MjSim(...)
         modder = TextureModifier(sim)
         modder.whiten_materials()  # ensures materials won't impact colors
         modder.set_checker('some_geom', (255, 0, 0), (0, 0, 0))
-        modder.rand_all('another_geom')
 
     Note: in order for the textures to take full effect, you'll need to set
     the rgba values for all materials to [1, 1, 1, 1], otherwise the texture
@@ -328,12 +448,32 @@ class MujocoTextureModifier(MujocoBaseModifier):
             return self._geom_checker_mats[geom_id]
 
     @register_as_setter("checker")
-    def set_checker(self, name: AnyStr, rgb1: RGB, rgb2: RGB):
+    def set_checker(self, name: AnyStr, rgb1: RGB, rgb2: RGB) \
+            -> Optional[Array]:
+        """Creates a checker texture from rgb1 to rgb2 and applies it as texture
+        to the specified geom
+
+        Does only effect geometries with a pre-specified texture!
+
+        More info:
+            http://www.mujoco.org/book/XMLreference.html#texture
+            http://www.mujoco.org/book/XMLreference.html#material
+            http://www.mujoco.org/book/XMLreference.html#geom
+
+        Args:
+            name: Internal name of the geom
+            rgb1: NumPy array holding the rgb color values of the start color
+            rgb2: NumPy array holding the rgb color values of the end color
+
+        Returns:
+            Applied bitmap texture
+        """
         geom_id, mat_id, tex_id = self.get_ids(name)
 
         if tex_id < 0:
-            warnings.warn("Setting checker texture only available for Textures. "
-                          "Make sure to define Textures in the corresponding XML to use this feature.")
+            warnings.warn("Setting checker texture only available for Textures."
+                          "Make sure to define Textures in the corresponding "
+                          "XML to use this feature.")
             return
 
         bitmap = self.get_texture(name).bitmap
@@ -347,13 +487,18 @@ class MujocoTextureModifier(MujocoBaseModifier):
         return bitmap
 
     def get_rgb(self, name) -> Array:
-        """
-        Grabs rgb color of a specific geom
+        """Grabs the RGB color of a specific geom
+
+        More info:
+            http://www.mujoco.org/book/XMLreference.html#texture
+            http://www.mujoco.org/book/XMLreference.html#material
+            http://www.mujoco.org/book/XMLreference.html#geom
 
         Args:
-            name (str): Name of the geom
+            Internal name of the geom
+
         Returns:
-            np.array: (r,g,b) geom colors
+            NumPy array with the rgb geom colors
         """
         geom_id, mat_id, tex_id = self.get_ids(name)
 
@@ -370,26 +515,38 @@ class MujocoTextureModifier(MujocoBaseModifier):
             return self.model.geom_rgba[geom_id, :3]
 
     @register_as_setter("gradient")
-    def set_gradient(self, name: AnyStr, rgb1: RGB, rgb2: RGB, vertical: bool = True):
-        """
-        Creates a linear gradient from rgb1 to rgb2.
+    def set_gradient(self, name: AnyStr, rgb1: RGB, rgb2: RGB,
+                     vertical: bool = True) -> Optional[Array]:
+        """Creates a linear gradient from rgb1 to rgb2 and applies it as
+        texture to the specified geom
+
+        Does only effect geometries with a pre-specified texture!
+
+        More info:
+            http://www.mujoco.org/book/XMLreference.html#texture
 
         Args:
-        - rgb1 (array): start color
-        - rgb2 (array): end color
-        - vertical (bool): if True, the gradient in the positive
-            y-direction, if False it's in the positive x-direction.
+            name: Internal name of the geom
+            rgb1: NumPy array holding the rgb color values of the start color
+            rgb2: NumPy array holding the rgb color values of the end color
+            vertical: if True, the gradient in the positive y-direction,
+                        if False it's in the positive x-direction
+
+        Returns:
+            NumPy array holding the bitmap if the given rgb array is applied
+            to a texture
         """
-        # NOTE: MuJoCo's gradient uses a sigmoid. Here we simplify
-        # and just use a linear gradient... We could change this
-        # to just use a tanh-sigmoid if needed.
         geom_id, mat_id, tex_id = self.get_ids(name)
 
         if tex_id < 0:
             warnings.warn("Setting gradient only available for Textures. "
-                          "Make sure to define Textures in the corresponding XML to use this feature.")
+                          "Make sure to define Textures in the corresponding "
+                          "XML to use this feature.")
             return
 
+        # NOTE: MuJoCo's gradient uses a sigmoid. Here we simplify
+        # and just use a linear gradient... We could change this
+        # to just use a tanh-sigmoid if needed.
         bitmap = self.get_texture(name).bitmap
         h, w = bitmap.shape[:2]
         if vertical:
@@ -411,9 +568,25 @@ class MujocoTextureModifier(MujocoBaseModifier):
 
     @register_as_setter("rgb")
     def set_rgb(self, name: AnyStr, rgb: RGB) -> Optional[Array]:
+        """Sets the color of a texture, material or geom to the given value
+
+        More info:
+            http://www.mujoco.org/book/XMLreference.html#texture
+            http://www.mujoco.org/book/XMLreference.html#material
+            http://www.mujoco.org/book/XMLreference.html#geom
+
+        Args:
+            name: Name string of the geom
+            rgb: NumPy array holding the rgb color values
+
+        Returns:
+            NumPy array holding the bitmap if the given rgb array is applied
+            to a texture
+        """
         geom_id, mat_id, tex_id = self.get_ids(name)
 
-        rgb = np.round(rgb) / 255.
+        if np.max(rgb) > 1.:
+            rgb = np.round(rgb) / 255.
 
         if tex_id >= 0 or name == 'skybox':
             bitmap = self.get_texture(name).bitmap
@@ -429,18 +602,28 @@ class MujocoTextureModifier(MujocoBaseModifier):
 
     @register_as_setter("noise")
     def set_noise(self, name: AnyStr, rgb1: RGB, rgb2: RGB, fraction: float = 0.9):
-        """
+        """Applies a new texture to the given geom on which noise is applied
+
+        Does only effect geometries with a pre-specified texture!
+
+        More info:
+            http://www.mujoco.org/book/XMLreference.html#texture
+
         Args:
-        - name (str): name of geom
-        - rgb1 (array): background color
-        - rgb2 (array): color of mod_func noise foreground color
-        - fraction (float): fraction of pixels with foreground color
+            name: Internal name of the geom
+            rgb1: Background color
+            rgb2: Color of mod_func noise foreground color
+            fraction: Fraction of pixels with foreground color
+
+        Returns:
+            NumPy array holding the bitmap of the changed texture
         """
         geom_id, mat_id, tex_id = self.get_ids(name)
 
         if tex_id < 0:
             warnings.warn("Setting noise only available for Textures. "
-                          "Make sure to define Textures in the corresponding XML to use this feature.")
+                          "Make sure to define Textures in the corresponding "
+                          "XML to use this feature.")
             return
 
         bitmap = self.get_texture(name).bitmap
@@ -455,6 +638,15 @@ class MujocoTextureModifier(MujocoBaseModifier):
 
     @register_as_setter("size")
     def set_size(self, name: AnyStr, value: Array):
+        """Sets the size of the specified geom object
+
+        More info:
+             http://www.mujoco.org/book/XMLreference.html#geom
+
+        Args:
+            name: Internal name of the geom
+            value: New size values as array-type with length 3
+        """
         geom_id = self.model.geom_name2id(name)
         assert geom_id > -1, "Unknown geom from body %s" % name
 
@@ -470,22 +662,26 @@ class MujocoTextureModifier(MujocoBaseModifier):
 
         return self.model.geom_size[geom_id]
 
-    def rand_checker(self, name: AnyStr):
-        rgb1, rgb2 = self.get_rand_rgb(2)
+    @deprecated("Direct randomization functions in modifiers should not be used")
+    def _rand_checker(self, name: AnyStr):
+        rgb1, rgb2 = self._get_rand_rgb(2)
         return self.set_checker(name, rgb1, rgb2)
 
-    def rand_gradient(self, name: AnyStr):
-        rgb1, rgb2 = self.get_rand_rgb(2)
+    @deprecated("Direct randomization functions in modifiers should not be used")
+    def _rand_gradient(self, name: AnyStr):
+        rgb1, rgb2 = self._get_rand_rgb(2)
         vertical = bool(self.random_state.uniform() > 0.5)
         return self.set_gradient(name, rgb1, rgb2, vertical=vertical)
 
-    def rand_rgb(self, name: AnyStr) -> Optional[Array]:
-        rgb = self.get_rand_rgb()
+    @deprecated("Direct randomization functions in modifiers should not be used")
+    def _rand_rgb(self, name: AnyStr) -> Optional[Array]:
+        rgb = self._get_rand_rgb()
         return self.set_rgb(name, rgb)
 
-    def rand_noise(self, name: AnyStr):
+    @deprecated("Direct randomization functions in modifiers should not be used")
+    def _rand_noise(self, name: AnyStr):
         fraction = 0.1 + self.random_state.uniform() * 0.8
-        rgb1, rgb2 = self.get_rand_rgb(2)
+        rgb1, rgb2 = self._get_rand_rgb(2)
         return self.set_noise(name, rgb1, rgb2, fraction)
 
     def upload_texture(self, name: AnyStr):
@@ -497,13 +693,12 @@ class MujocoTextureModifier(MujocoBaseModifier):
             render_context.upload_texture(texture.id)
 
     def whiten_materials(self, geom_names=None) -> None:
-        """
-        Helper method for setting all material colors to white, otherwise
+        """Helper method for setting all material colors to white, otherwise
         the texture setters won't take full effect.
 
         Args:
-        - geom_names (list): list of geom names whose materials should be
-            set to white. If omitted, all materials will be changed.
+            geom_names (list): list of geom names whose materials should be
+                set to white. If omitted, all materials will be changed.
         """
         geom_names = geom_names or []
         if geom_names:
@@ -514,9 +709,10 @@ class MujocoTextureModifier(MujocoBaseModifier):
         else:
             self.model.mat_rgba[:] = 1.0
 
-    def get_rand_rgb(self, n=1):
+    def _get_rand_rgb(self, n=1):
         def _rand_rgb():
-            return np.array(self.random_state.uniform(size=3) * 255, dtype=np.uint8)
+            return np.array(self.random_state.uniform(size=3) * 255,
+                            dtype=np.uint8)
 
         if n == 1:
             return _rand_rgb()
@@ -604,9 +800,16 @@ class MujocoJointModifier(MujocoBaseModifier):
 
     @register_as_setter("range")
     def set_range(self, name: AnyStr, value: Array) -> None:
-        """
-        Values should be in radian. If simulation assumes degree values
-        this will be automatically converted. TODO
+        """Sets the range of the specified joint.
+
+        Values should be in radian.
+
+        More info:
+            http://www.mujoco.org/book/XMLreference.html#joint
+
+        Args:
+            name: Name of the joint
+            value: New range values as array-type with length 2
         """
         jointid = self._get_jointid(name)
         assert jointid > -1, "Unknown joint %s" % name
@@ -616,6 +819,15 @@ class MujocoJointModifier(MujocoBaseModifier):
 
     @register_as_setter("damping")
     def set_damping(self, name: AnyStr, value: float) -> None:
+        """Sets the damping of the specified joint
+
+        More info:
+            http://www.mujoco.org/book/XMLreference.html#joint
+
+        Args:
+            name: Name of the joint
+            value: New damping value as float
+        """
         jointid = self._get_jointid(name)
         assert jointid > -1, "Unknown joint %s" % name
         joint_type = self._get_joint_type(name)
@@ -626,6 +838,15 @@ class MujocoJointModifier(MujocoBaseModifier):
 
     @register_as_setter("armature")
     def set_armature(self, name: AnyStr, value: float) -> None:
+        """Sets the armature of the specified joint
+
+        More info:
+            http://www.mujoco.org/book/XMLreference.html#joint
+
+        Args:
+            name: Name of the joint
+            value: New armature value as float
+        """
         jointid = self._get_jointid(name)
         assert jointid > -1, "Unknown joint %s" % name
         joint_dofadr = self._get_joint_dofadr(name)
@@ -633,6 +854,15 @@ class MujocoJointModifier(MujocoBaseModifier):
 
     @register_as_setter("stiffness")
     def set_stiffness(self, name: AnyStr, value: float) -> None:
+        """Sets the stiffness of the specified joint
+
+        More info:
+            http://www.mujoco.org/book/XMLreference.html#joint
+
+        Args:
+            name: Name of the joint
+            value: New stiffness value as float
+        """
         jointid = self._get_jointid(name)
         assert jointid > -1, "Unknown joint %s" % name
 
@@ -640,6 +870,15 @@ class MujocoJointModifier(MujocoBaseModifier):
 
     @register_as_setter("frictionloss")
     def set_frictionloss(self, name: AnyStr, value: float) -> None:
+        """Sets the frictionloss of the specified joint
+
+        More info:
+            http://www.mujoco.org/book/XMLreference.html#joint
+
+        Args:
+            name: Name of the joint
+            value: New frictionloss value as float
+        """
         jointid = self._get_jointid(name)
         assert jointid > -1, "Unknown joint %s" % name
         joint_dofadr = self._get_joint_dofadr(name)
@@ -652,6 +891,15 @@ class MujocoJointModifier(MujocoBaseModifier):
 
     @register_as_setter("quat")
     def set_quat(self, name, value: Array) -> None:
+        """Sets the quaternion of the specified joint
+
+        More info:
+            http://www.mujoco.org/book/XMLreference.html#joint
+
+        Args:
+            name: Name of the joint
+            value: New quaternion value as array-type with 4 values
+        """
         value = list(value)
         assert len(value) == 4, (
                 "Expectd value of length 4, instead got %s" % value)
@@ -666,6 +914,15 @@ class MujocoJointModifier(MujocoBaseModifier):
 
     @register_as_setter("pos")
     def set_pos(self, name: AnyStr, value: Array) -> None:
+        """Sets the xyz-position of the specified joint
+
+        More info:
+            http://www.mujoco.org/book/XMLreference.html#joint
+
+        Args:
+            name: Name of the joint
+            value: New position value as array-type with 3 values
+        """
         value = list(value)
         assert len(value) == 3, (
                 "Expected value of length 3, instead got %s" % value)
@@ -689,7 +946,7 @@ class MujocoBodyModifier(MujocoBaseModifier):
         assert self.model.body_name2id(name) > -1, "Unknown body %s" % name
         return self.model.body_name2id(name)
 
-    def set_geom_type(self, name: AnyStr, value: int):
+    def set_geom_type(self, name: AnyStr, value: int) -> None:
         bodyid = self._get_bodyid(name)
 
         if self.model.geom_type[bodyid] == 7:
@@ -698,6 +955,15 @@ class MujocoBodyModifier(MujocoBaseModifier):
 
     @register_as_setter("pos")
     def set_pos(self, name: AnyStr, value: Array) -> None:
+        """Sets the xyz-position of the specified body
+
+        More info:
+            http://www.mujoco.org/book/XMLreference.html#body
+
+        Args:
+            name: Name of the body
+            value: New position value as array-type with 3 values
+        """
         value = list(value)
         assert len(value) == 3, (
                 "Expected value of length 3, instead got %s" % value)
@@ -707,6 +973,19 @@ class MujocoBodyModifier(MujocoBaseModifier):
 
     @register_as_setter("mass")
     def set_mass(self, name: AnyStr, value: float) -> None:
+        """Sets the mass of the specified body
+
+        In the XML this can be specified in 'inertial' or 'geom' objects
+        and gets parsed to the bodies during compilation
+
+        More info:
+            http://www.mujoco.org/book/XMLreference.html#inertial
+            http://www.mujoco.org/book/XMLreference.html#geom
+
+        Args:
+            name: Name of the body
+            value: New mass value as float
+        """
         bodyid = self._get_bodyid(name)
 
         self.model.body_mass[bodyid] = value
@@ -714,6 +993,20 @@ class MujocoBodyModifier(MujocoBaseModifier):
 
     @register_as_setter("diaginerta")
     def set_diaginertia(self, name: AnyStr, value: Array) -> None:
+        """Sets the diagonal inertia of the specified body (xx, yy, zz; rest is
+        set to 0)
+
+        In the XML this can be specified in 'inertial' or 'geom' objects
+        and gets parsed to the bodies during compilation
+
+        More info:
+            http://www.mujoco.org/book/XMLreference.html#inertial
+            http://www.mujoco.org/book/XMLreference.html#geom
+
+        Args:
+            name: Name of the body
+            value: New inertia matrix values as array-type with 3 values
+        """
         bodyid = self._get_bodyid(name)
 
         value = list(value)
@@ -723,6 +1016,19 @@ class MujocoBodyModifier(MujocoBaseModifier):
         self.update()
 
     def set_fullinertia(self, name: AnyStr, value: Array) -> None:
+        """Sets the inertia matrix of the specified body
+
+        In the XML this can be specified in 'inertial' or 'geom' objects
+        and gets parsed to the bodies during compilation
+
+        More info:
+            http://www.mujoco.org/book/XMLreference.html#inertial
+            http://www.mujoco.org/book/XMLreference.html#geom
+
+        Args:
+            name: Name of the body
+            value: New inertia matrix values as array-type with 6 values
+        """
         bodyid = self._get_bodyid(name)
 
         value = list(value)
@@ -735,6 +1041,20 @@ class MujocoBodyModifier(MujocoBaseModifier):
 
     @register_as_setter("friction")
     def set_friction(self, name: AnyStr, value: Array) -> None:
+        """Sets the friction values for the x, y and z dimension of the
+        specified body
+
+        In the XML this can be specified in 'inertial' or 'geom' objects
+        and gets parsed to the bodies during compilation
+
+        More info:
+            http://www.mujoco.org/book/XMLreference.html#inertial
+            http://www.mujoco.org/book/XMLreference.html#geom
+
+        Args:
+            name: Internal name of the body
+            value: New friction values as array-type with 3 values
+        """
         bodyid = self._get_bodyid(name)
         geomid = self.model.body_geomadr[bodyid]
         assert geomid > -1, "Unknown geom from body %s" % name
@@ -752,6 +1072,19 @@ class MujocoBodyModifier(MujocoBaseModifier):
 
     @register_as_setter("quat")
     def set_quat(self, name: AnyStr, value: Array) -> None:
+        """Sets the quaternion of the specified body
+
+        In the XML this can be specified in 'inertial' or 'geom' objects
+        and gets parsed to the bodies during compilation
+
+        More info:
+            http://www.mujoco.org/book/XMLreference.html#inertial
+            http://www.mujoco.org/book/XMLreference.html#geom
+
+        Args:
+            name: Internal name of the body
+            value: New inertia value as array-type with 3 values
+        """
         value = list(value)
         assert len(value) == 4, "Expected value of length 4, instead got %s" % value
         bodyid = self._get_bodyid(name)
@@ -776,7 +1109,19 @@ class MujocoActuatorModifier(MujocoBaseModifier):
 
     @register_as_setter("gear")
     def set_gear(self, name: AnyStr, value: Union[float, Array]) -> None:
-        actuatorid = self._get_actuatorid(name)
+        """Sets gear values of the specified actuator in given order (up to 6 values)
+
+        If only an float value is specified, the first gear value is changed.
+        Otherwise the values are changed up to the specified quantity.
+
+        More info:
+            http://www.mujoco.org/book/XMLreference.html#actuator
+
+        Args:
+            name: Internal name of the Mujoco actuator
+            value: New gear values as float or array-type with max. 6 values
+        """
+        actuator_id = self._get_actuatorid(name)
 
         if isinstance(value, float):
             value = [value, 0.0, 0.0, 0.0, 0.0, 0.0]
@@ -784,25 +1129,45 @@ class MujocoActuatorModifier(MujocoBaseModifier):
             assert len(value) <= 6, "Expected value of max. length 6, instead got %s" % value
             value = [value[i] if i < len(value) else 0.0 for i in range(6)]
 
-        self.model.actuator_gear[actuatorid] = value
+        self.model.actuator_gear[actuator_id] = value
         self.sim.set_constants()
 
     @register_as_setter("forcerange")
     def set_forcerange(self, name: AnyStr, value: Array) -> None:
-        actuatorid = self._get_actuatorid(name)
+        """Sets force range values of the specified actuator for clamping the
+        force input
+
+        More info:
+            http://www.mujoco.org/book/XMLreference.html#actuator
+
+        Args:
+            name: Internal name of the Mujoco actuator
+            value: New force range values as float or array-type with max. 6 values
+        """
+        actuator_id = self._get_actuatorid(name)
 
         assert len(value) == 2, "Expected value of length 2, instead got %s" % value
 
-        self.model.actuator_forcerange[actuatorid] = value
+        self.model.actuator_forcerange[actuator_id] = value
         self.sim.set_constants()
 
     @register_as_setter("ctrlrange")
     def set_ctrlrange(self, name: AnyStr, value: Array) -> None:
-        actuatorid = self._get_actuatorid(name)
+        """Sets control range values of the specified actuator for clamping the
+        control input
+
+        More info:
+            http://www.mujoco.org/book/XMLreference.html#actuator
+
+        Args:
+            name: Internal name of the Mujoco actuator
+            value: New control range values as float or array-type with max. 6 values
+        """
+        actuator_id = self._get_actuatorid(name)
 
         assert len(value) == 2, "Expected value of length 2, instead got %s" % value
 
-        self.model.actuator_ctrlrange[actuatorid] = value
+        self.model.actuator_ctrlrange[actuator_id] = value
         self.sim.set_constants()
 
 
@@ -818,32 +1183,72 @@ class MujocoOptionModifier(MujocoBaseModifier):
 
     @register_as_setter("gravity")
     def set_gravity(self, name: AnyStr = None, value: Union[float, Array] = -9.81) -> None:
+        """Sets global gravity value; name is not needed but to simply usage
+
+        If value is of type float, the gravity in z-dimension is changed;
+        otherwise the gravity vector is filled until all 3 dimensions are
+        changed.
+
+        More info:
+            http://www.mujoco.org/book/XMLreference.html#option
+
+        Args:
+            name: Not needed
+            value: New gravity value
+        """
         if isinstance(value, float):
             value = [0, 0, value]
         elif len(value) < 3:
-            assert len(value) <= 3, "Expected value of max. length 3, instead got %s" % value
             value = list(reversed([value[i] if i < len(value) else 0 for i in range(3)]))
         elif len(value) == 3:
             pass
         else:
-            raise ValueError
+            raise ValueError("Expected value of max. length 3, instead got %s" % value)
         self.model.opt.gravity[:] = value[:]
         self.update()
 
     @register_as_setter("viscosity")
     def set_viscosity(self, name: AnyStr = None, value: float = 0.0):
+        """Sets global viscosity value; name is not needed but to simply usage
+
+        More info:
+            http://www.mujoco.org/book/XMLreference.html#option
+
+        Args:
+            name: Not needed
+            value: New viscosity value
+        """
         assert value >= 0., "Expected viscosity value >= 0, instead got %s" % value
 
         self.sim.model.opt.viscosity = value
 
     @register_as_setter("density")
     def set_density(self, name: AnyStr = None, value: float = 0.0):
+        """Sets global density value; name is not needed but to simply usage
+
+        More info:
+            http://www.mujoco.org/book/XMLreference.html#option
+
+        Args:
+            name: Not needed
+            value: New density value
+        """
         assert value >= 0., "Expected density value >= 0, instead got %s" % value
 
         self.sim.model.opt.density = value
         
     @register_as_setter("timestep")
-    def set_density(self, name: AnyStr = None, value: float = 0.0):
+    def set_timestep(self, name: AnyStr = None, value: float = 0.0):
+        """Sets global simulation timestep value;
+        name is not needed but to simply usage
+
+        More info:
+            http://www.mujoco.org/book/XMLreference.html#option
+
+        Args:
+            name: Not needed
+            value: New simulation timestep value
+        """
         assert value >= 0., "Expected timestep value >= 0, instead got %s" % value
 
         self.sim.model.opt.timestep = value
