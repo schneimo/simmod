@@ -56,15 +56,17 @@ class BaseModifier(metaclass=abc.ABCMeta):
 
         default = self._get_default_from_config(config)
         self.instrumentation = list()
-        self.execution_point = execution_point = config['options']['execution']
+        #self.execution_point = execution_point = config['options']['execution']
         for setter in config:
 
             # 'options' not for configuration of properties
             if setter == 'options':
                 continue
 
-            # Get the parameter ranges for every object specified and store this parameterization
-            assert setter in self.standard_setters.keys(), "Unknown setter function %s" % setter
+            # Get the parameter ranges for every object specified
+            # and store this parameterization
+            assert setter in self.standard_setters.keys(), \
+                "Unknown setter function %s" % setter
             object_names = config[setter].keys()
             use_default = False
             for object_name in object_names:
@@ -73,21 +75,33 @@ class BaseModifier(metaclass=abc.ABCMeta):
                     continue
                 properties = config[setter][object_name]
                 range_val = properties['values']
-                distribution = properties['distribution'] if 'distribution' in properties.keys() else 'uniform'
-                operation = properties['operation'] if 'operation' in properties.keys() else 'replacing'
-                mod_inst = Parametrization(setter, object_name, range_val, distribution, operation, execution_point)
+                distribution = properties['distribution'] \
+                    if 'distribution' in properties.keys() else 'uniform'
+                operation = properties['operation'] \
+                    if 'operation' in properties.keys() else 'replacing'
+                execution_point = properties['execution'] \
+                    if 'execution' in properties.keys() else 'RESET'
+                mod_inst = Parametrization(setter, object_name, range_val,
+                                           distribution, operation,
+                                           execution_point)
                 self.instrumentation.append(mod_inst)
 
-            # If 'default' was specified for this setter, then we have to get the default configuration for all
-            # unspecified objects
+            # If 'default' was specified for this setter, then we have to get
+            # the default configuration for all unspecified objects
             if use_default:
                 diff = list(set(self.names) - set(object_names))
                 for object_name in diff:
                     properties = config[setter]['default']
                     default_range_val = properties['values']
-                    distribution = properties['distribution'] if 'distribution' in properties.keys() else 'uniform'
-                    operation = properties['operation'] if 'operation' in properties.keys() else 'replacing'
-                    mod_inst = Parametrization(setter, object_name, default_range_val, distribution, operation, execution_point)
+                    distribution = properties['distribution'] \
+                        if 'distribution' in properties.keys() else 'uniform'
+                    operation = properties['operation'] \
+                        if 'operation' in properties.keys() else 'replacing'
+                    execution_point = properties['execution'] \
+                        if 'execution' in properties.keys() else 'RESET'
+                    mod_inst = Parametrization(setter, object_name,
+                                               default_range_val, distribution,
+                                               operation, execution_point)
                     self.instrumentation.append(mod_inst)
 
     def _get_basic_config(self) -> Dict:
@@ -97,7 +111,8 @@ class BaseModifier(metaclass=abc.ABCMeta):
         return load_yaml(path)
 
     def _init_setters(self):
-        methods = [getattr(self, method_name) for method_name in dir(self) if callable(getattr(self, method_name))]
+        methods = [getattr(self, method_name) for method_name in dir(self)
+                   if callable(getattr(self, method_name))]
         for method in methods:
             if isinstance(method, property):
                 method = method.fget

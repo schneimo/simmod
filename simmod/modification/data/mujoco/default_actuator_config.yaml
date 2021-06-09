@@ -1,6 +1,4 @@
 ---
-options:
-  execution: 'RESET'
 gear:
   default:
     values:

@@ -4,7 +4,6 @@ Modification Framework for the Bullet simulator for Python.
 
 from collections import defaultdict
 from enum import Enum
-from typing import AnyStr, List, Union, Dict, Tuple
 
 import numpy as np
 

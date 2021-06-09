@@ -1,6 +1,8 @@
-# <div align="center"> S🔧MM⚙️D </div>
-### <div align="center"> A Framework to Modify Simulations Online </div>
+<p align="center">
+    <img src="./_assets/simmod.png">
+</p>
 
+### <div align="center"> A Framework to Modify Simulations Online </div>
 
 <p align="center">
     <a href="https://choosealicense.com/licenses/mit/">
@@ -85,34 +87,51 @@ As you can see in the example above, all modifiers can be configured with config
 Configurations are stored as dictionaries and can be externally loaded from yaml files.
 
 ### Modifiers
-Each modifier is built on a configuration. If no configuration is given it is taken from a standard configuration file in [simmod/modification/data/](./simmod/modification/data/) which
-usually defines the object parameter bounds at infinity or zero. This might make the simulation unstable. Therefore, it is recommended to define a configuration for each modifier individual to your specific application. 
-Each property of the modifier (i.e. `mass`) holds the objects that should be changed. For each of these objects an upper or lower bound must be given in a tuple (one tuple for each dimension).
+Each modifier is built on a configuration. If no configuration is given it is taken from a standard configuration file in [simmod/modification/data/](./simmod/modification/data/) which usually defines the object parameter bounds at infinity or zero. This might make the simulation unstable. Therefore, it is recommended to define a configuration for each modifier individual to your specific application. 
+Each property of the modifier (i.e. `mass`) holds the specific objects that 
+should be changed.
+
+Each configuration part can include multiple options:
+- For each of these objects the corresponding randomization  distribution 
+  can be specified under `distribution`. Available distributions are 
+  "uniform", "normal" and "loguniform". The default one is "uniform" if no 
+  other distribution is specified.
+  
+- The input ranges for each distribution must be described by a tuple (one 
+  tuple for each dimension) at the attribute `values` (upper and lower bound 
+  for the uniforms and mean and standard deviation for the normal).
 
 Example:
 ```yaml
 ---
-options:
-  execution: 'RESET'
 mass:
   pole:
-    - [0.018, 0.03]  # [lower bound, upper bound]
+    distribution: "uniform"
+    values:
+      - [0.018, 0.03]  # [lower bound, upper bound]
   arm:
-    - [0.05175, 0.08625]
+    distribution: "normal"
+    values:
+      - [0.05175, 0.043125]  # [mean, standard deviation]
 ```
-This configuration only changes the mass of the objects named `pole` and `arm` in the simulation when using a modifier which changes the property `mass` (usually modifier which change bodies). The `options` category defines specific options of the modifier and the algorithms. I.e. the attribute `execution` defines when the simulation properties gets changed (i.e. 'RESET', 'BEFORE_STEP' and 'AFTER_STEP').
+This configuration only changes the mass of the objects named `pole` and `arm` in the simulation when using a modifier which changes the property `mass` (usually modifier which change bodies). 
+<!---
+The `options` category defines specific options of the modifier and the algorithms. I.e. the attribute `execution` defines when the simulation properties gets changed (i.e. 'RESET', 'BEFORE_STEP' and 'AFTER_STEP').
+-->
 If a configuration is given, only those objects which are defined in
 this configuration are used by the domain randomization algorithms.
 If all other objects should be changed in a specific range this can be specified via an additional object called `default`:
 ```yaml
 ---
-options:
-  execution: 'RESET'
 mass:
   arm:
-    - [0.05175, 0.08625]
+    distribution: "uniform"
+    values:
+      - [0.05175, 0.08625]
   default:
-    - [0, .inf] 
+    distribution: "uniform"
+    values:
+      - [0, .inf] 
     # lower and upper bound of each object except for object with name 'arm'
 ```
 Therefore, it is important that no object in the simulation is named `default` to avoid unexpected behavior.
@@ -124,29 +143,28 @@ To run many experiments in one single run, configuration files for modifiers can
 ---
 experiment-1:
     MujocoBodyModifier:
-        options:
-            execution: 'RESET'
         mass:
             pole:
+              values:
                 - [0.018, 0.03]
 
 experiment-2:
     MujocoBodyModifier:
-        options:
-            execution: 'RESET'
         mass:
             pole:
-                - [0.018, 0.03]
+                values:
+                  - [0.018, 0.03]
             arm:
+              values:
                 - [0.05175, 0.08625]
     MujocoJointModifier:
-        options:
-            execution: 'RESET'
         damping:
             base_motor:
-              - [ 0.000373125, 0.000621875 ]
+              values:
+                - [ 0.000373125, 0.000621875 ]
             arm_pole:
-              - [ 0.0000748875, 0.0001248125 ]
+              values:
+                - [ 0.0000748875, 0.0001248125 ]
 ```
 
 Those experiment configurations can be loaded with special utility functions:

@@ -1,6 +1,4 @@
 ---
-options:
-  execution: 'RESET'
 checker:
   default:
     values:

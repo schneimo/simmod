@@ -3,13 +3,11 @@ value ranges. All those variables are stored in an individual parameterization i
 """
 from abc import ABC
 from enum import Enum, auto
-from typing import Union, List, Callable, AnyStr, Tuple, Any, Dict, Optional
+from typing import Union, List, Callable, AnyStr, Tuple, Any, Dict, Optional, Sequence
 
 import numpy as np
 
-Num = Union[int, float]
-Array = Union[np.ndarray, List]
-ArrayOrNum = Union[Array, Num]
+from simmod.utils.typings_ import *
 
 
 class Execution(Enum):
@@ -63,11 +61,51 @@ class Parametrization:
     def __str__(self):
         return f'{self.setter}:{self.object_name}={self.current_val}'
 
+    def sample(self, n_params,
+               random_state: Optional[RandomStateOrGenerator] = None):
+
+        if random_state is None:
+            random_state = np.random.default_rng()
+
+        a, b = self._values_one, self._values_two
+        new_values = list()
+        assert len(a) == len(b)
+        n = len(a)
+        for _ in range(n_params):
+            dist = self.distribution
+            if dist == 'uniform':
+                values = np.array(
+                    [random_state.uniform(a[i], b[i]) for i in range(n)])
+            elif dist == 'normal' or dist == 'gaussian':
+                values = np.array(
+                    [random_state.normal(a[i], b[i]) for i in range(n)])
+            elif dist == 'loguniform':
+                values = np.exp(
+                    [random_state.uniform(a[i], b[i]) for i in range(n)])
+            else:
+                raise ValueError(
+                    f"Distribution type '{dist}' not available, use 'uniform', "
+                    f"'loguniform' or 'normal'")
+            new_values.append(values)
+        return new_values
+
     @property
-    def parameter_values(self):
+    def entropy(self) -> float:
+        a, b = self._values_one, self._values_two
+        if self.distribution == "uniform":
+            return float(np.sum(np.log(b - a)))
+        elif self.distribution == "normal" or self.distribution == "gaussian":
+            return float(np.sum(0.5 * (1 + np.log(2 * np.pi * b ** 2))))
+        elif self.distribution == "loguniform":
+            return float(np.sum(0.5 * np.log(a*b) + np.log(np.log(b*1.0 / a))))
+        else:
+            raise ValueError(f"Unknown distribution type '{self.distribution}'")
+
+    @property
+    def parameter_values(self) -> Tuple[float, float]:
         return (self._values_one, self._values_two)
 
-    def update(self, new_values, **kwargs):
+    def update(self, new_values, **kwargs) -> None:
         if self.current_val is not None:
             self.history.append(self.current_val)
         self.current_val = new_values

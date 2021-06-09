@@ -1,10 +1,10 @@
 ---
-options:
-  execution: 'RESET'
 mass:
   pole:
+    distribution: "uniform"
     values:
       - [0.018, 0.03]
   arm:
+    distribution: "normal"
     values:
-      - [0.05175, 0.08625]
+      - [0.05175, 0.43125]
