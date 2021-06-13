@@ -15,14 +15,13 @@
 
 A simple framework to change visual and physical parameters of various simulations without reloading the simulation and through a standardized interface.
 
-Changing parameters online is especially useful for domain randomization and curriculum learning in robotics research. Thus several algorithms for domain randomization are directly included (Uniform Domain Randomization, ...).
+Changing parameters online is especially useful for domain randomization and curriculum learning in robotics research. Thus several algorithms for domain randomization are directly included (Uniform Domain Randomization, Automatic Domain Randomization).
 
 Parameters can be changed directly with the simulation attributes or if applicable over corresponding OpenAI Gym wrapper.
 
-Currently supported simulations:
-- Mujoco
+Currently only Mujoco through the mujoco-py package is supported. PyBullet, Gazebo and other simulations will follow soon.
 
-Furthermore, online modification of built-in Python variables of the simulation class is also supported.
+Furthermore, online modification of built-in Python variables of the simulation class is supported.
 
 ## Installation
 Clone the repo and cd into it:
